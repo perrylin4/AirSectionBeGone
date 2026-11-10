@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "airsectionbegone",
+  "version": "${version}",
+  "name": "AirSectionBeGone",
+  "description": "Shares immutable AIR/THE_VOID chunk-section data to reduce dedicated-server memory usage.",
+  "authors": [
+    "perrylin4"
+  ],
+  "contact": {
+    "sources": "https://github.com/perrylin4/AirSectionBeGone",
+    "issues": "https://github.com/perrylin4/AirSectionBeGone/issues"
+  },
+  "license": "MIT",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "com.perry.asbg.AirSectionBeGone"
+    ]
+  },
+  "mixins": [
+    "airsectionbegone.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.20.1",
+    "minecraft": "=1.21.11",
+    "java": ">=21",
+    "fabric-api": ">=0.141.6+1.21.11",
+    "lithium": "=0.21.4"
+  },
+  "suggests": {
+    "c2me": "*",
+    "fantasy": "*",
+    "ferritecore": "*"
+  }
+}
