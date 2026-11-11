@@ -12,17 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ChunkAccess.class)
 public abstract class ChunkAccessMixin {
-    @Inject(method = "fillBiomesFromNoise", at = @At("HEAD"))
-    private void asbg$prepareBiomeWrite(
-            BiomeResolver resolver,
-            Climate.Sampler sampler,
-            CallbackInfo ci
-    ) {
-        if ((Object) this instanceof LevelChunk chunk) {
-            AirVoidSectionManager.prepareBiomeWrite(chunk);
-        }
-    }
-
     @Inject(method = "fillBiomesFromNoise", at = @At("RETURN"))
     private void asbg$finishBiomeWrite(
             BiomeResolver resolver,
@@ -30,7 +19,7 @@ public abstract class ChunkAccessMixin {
             CallbackInfo ci
     ) {
         if ((Object) this instanceof LevelChunk chunk) {
-            AirVoidSectionManager.canonicalizeAll(chunk);
+            AirVoidSectionManager.canonicalizeAllBiomes(chunk);
         }
     }
 }

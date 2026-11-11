@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "ChunkAccessMixin",
-    "LevelChunkMixin"
+    "LevelChunkMixin",
+    "LevelChunkSectionStorageMixin"
   ],
   "injectors": {
     "defaultRequire": 1
