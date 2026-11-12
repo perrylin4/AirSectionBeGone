@@ -42,10 +42,18 @@ public final class AirVoidSectionManager {
             return;
         }
 
-        for (LevelChunkSection section : chunk.getSections()) {
-            canonicalizeStates(level, section);
-            canonicalizeBiomes(level, section);
+        canonicalizeSections(level, chunk.getSections());
+    }
+
+    public static void canonicalizeImposterSections(
+            LevelChunk wrapped,
+            LevelChunkSection[] backingSections
+    ) {
+        if (!ENABLED || !(wrapped.getLevel() instanceof ServerLevel level)) {
+            return;
         }
+
+        canonicalizeSections(level, backingSections);
     }
 
     public static void canonicalizeAllBiomes(LevelChunk chunk) {
@@ -64,12 +72,27 @@ public final class AirVoidSectionManager {
         }
 
         int index = chunk.getSectionIndex(pos.getY());
-        if (!isValidIndex(chunk, index)) {
+        if (isInvalidIndex(chunk, index)) {
             return;
         }
 
         SectionRefoldScheduler.cancel(level, sectionPos(chunk, index));
         thawStates(chunk.getSection(index));
+    }
+
+    public static void prepareSectionBlockWrite(
+            LevelChunkSection section,
+            int x,
+            int y,
+            int z,
+            BlockState newState
+    ) {
+        if (!ENABLED || !(section.getStates() instanceof ImmutablePalettedContainer<?>)
+                || section.getBlockState(x, y, z) == newState) {
+            return;
+        }
+
+        thawStates(section);
     }
 
     public static void finishBlockWrite(LevelChunk chunk, BlockPos pos, BlockState newState) {
@@ -79,7 +102,7 @@ public final class AirVoidSectionManager {
         }
 
         int index = chunk.getSectionIndex(pos.getY());
-        if (!isValidIndex(chunk, index)) {
+        if (isInvalidIndex(chunk, index)) {
             return;
         }
 
@@ -112,21 +135,20 @@ public final class AirVoidSectionManager {
         return true;
     }
 
-    static boolean canonicalizeBiomes(ServerLevel level, LevelChunkSection section) {
+    static void canonicalizeBiomes(ServerLevel level, LevelChunkSection section) {
         if (!ENABLED || section.getClass() != LevelChunkSection.class
                 || section.getBiomes() instanceof ImmutablePalettedContainer<?>) {
-            return false;
+            return;
         }
 
         Optional<ResourceKey<Biome>> biomeKey = findUniformBiomeKey(section.getBiomes());
         if (biomeKey.isEmpty()) {
-            return false;
+            return;
         }
 
         ((LevelChunkSectionStorage) section).asbg$setBiomes(
                 sharedData(level).biome(biomeKey.get())
         );
-        return true;
     }
 
     public static void clearCaches() {
@@ -136,21 +158,34 @@ public final class AirVoidSectionManager {
         SectionRefoldScheduler.clearAll();
     }
 
+    private static void canonicalizeSections(ServerLevel level, LevelChunkSection[] sections) {
+        for (LevelChunkSection section : sections) {
+            canonicalizeStates(level, section);
+            canonicalizeBiomes(level, section);
+        }
+    }
+
     private static void thawStates(LevelChunkSection section) {
         if (!(section.getStates() instanceof ImmutablePalettedContainer<?>)) {
             return;
         }
 
-        ((LevelChunkSectionStorage) section).asbg$setStates(section.getStates().copy());
+        synchronized (section) {
+            if (!(section.getStates() instanceof ImmutablePalettedContainer<?>)) {
+                return;
+            }
 
-        LithiumSectionData.SectionData sectionData = ((LithiumSectionData) section).lithium$getSectionData();
-        short[] countsByFlag = sectionData.getCountsByFlag();
-        if (countsByFlag != null) {
-            sectionData.setCountsByFlag(countsByFlag.clone());
-        }
-        byte[] randomTickCounts = sectionData.getRandomTickableBlocksByY();
-        if (randomTickCounts != null) {
-            sectionData.setRandomTickableBlocksByY(randomTickCounts.clone());
+            ((LevelChunkSectionStorage) section).asbg$setStates(section.getStates().copy());
+
+            LithiumSectionData.SectionData sectionData = ((LithiumSectionData) section).lithium$getSectionData();
+            short[] countsByFlag = sectionData.getCountsByFlag();
+            if (countsByFlag != null) {
+                sectionData.setCountsByFlag(countsByFlag.clone());
+            }
+            byte[] randomTickCounts = sectionData.getRandomTickableBlocksByY();
+            if (randomTickCounts != null) {
+                sectionData.setRandomTickableBlocksByY(randomTickCounts.clone());
+            }
         }
     }
 
@@ -250,8 +285,8 @@ public final class AirVoidSectionManager {
         );
     }
 
-    private static boolean isValidIndex(LevelChunk chunk, int index) {
-        return index >= 0 && index < chunk.getSections().length;
+    private static boolean isInvalidIndex(LevelChunk chunk, int index) {
+        return index < 0 || index >= chunk.getSections().length;
     }
 
     private record SharedAirData(

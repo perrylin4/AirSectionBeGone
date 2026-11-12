@@ -17,16 +17,16 @@ AirSectionBeGone 是一个仅面向专用服务端的 Fabric 1.21.11 内存优�
 
 ## 安全模型
 
-- 只处理已经成为 `LevelChunk` 的完整区块，不介入 `ProtoChunk` 或异步世界生成。
+- 处理已经成为 `LevelChunk` 的完整区块，以及包装该完整区块的 `ImposterProtoChunk` 自己持有的隐藏 section 数组；真正的生成期 `ProtoChunk` 仍不处理。
 - 只折叠运行时类型恰好为原版 `LevelChunkSection` 的对象，避免破坏其他模组的 section 子类。
 - `LevelChunkSection` 的对象身份、Lithium `SectionData` 和位置监听器始终保留；本模组不会再使 Lithium 监听器失效或重新绑定。
-- 非空气方块写入共享方块容器前执行写时复制，并同时复制 Lithium 会被写路径修改的计数数组。
+- 通过 `LevelChunk` 或直接通过 `LevelChunkSection#setBlockState` 写入共享方块容器前都会执行写时复制，并同时复制 Lithium 会被写路径修改的计数数组。
 - 方块重新变成单一原版空气后延迟 200 tick 折叠，每个世界每 tick 最多折叠 64 个 section，避免高频更新时反复复制。
 - 群系写入沿用原版 `recreate()` 路径产生可变容器，写完后再检查是否可以共享。
 - 任何绕过所属区块、直接修改共享 palette 的行为都会抛出 `UnsupportedOperationException`，避免静默污染多个区块和存档。
 - 不改变区块磁盘格式或网络格式；移除模组后仍可由原版格式正常读取。
 
-实现与兼容性边界详见 [架构说明](docs/ARCHITECTURE.md)，本次受控 A/B 测试见 [基准结果](docs/BENCHMARK.md)。
+实现与兼容性边界详见 [架构说明](docs/ARCHITECTURE.md)。[内存基准](docs/BENCHMARK.md)对比同一生产服务器的四份 heap dump：4064 高虚空建筑场景下，在已开启 Polymer 延迟分配、区块数量相同的情况下，ASBG 进一步减少 section 联合 retained size 565.518 MiB；两项同时开启相对未优化减少 86.624%，同一分析器模型下全堆可达对象占用减少 67.701%。
 
 诊断或复测时可用 JVM 参数 `-Dairsectionbegone.enabled=false` 保持模组加载但关闭全部折叠逻辑。
 

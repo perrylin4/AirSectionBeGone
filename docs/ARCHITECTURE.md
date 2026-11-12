@@ -42,6 +42,8 @@
 6. `RETURN` 处若新状态是三种受支持空气之一，且 section 已经只含空气，则加入延迟折叠队列。
 7. 连续 200 tick 未被非空气写入后，队列重新确认 4096 个状态确实同一种，再换回共享容器。每个世界每 tick 最多完成 64 次折叠，并最多弹出 256 个候选，避免单 tick 尖峰。
 
+另外，`LevelChunkSection#setBlockState` 的五参数底层重载在 `HEAD` 也有一层通用写时复制保护。它覆盖 `ImposterProtoChunk#getSection()` 暴露 backing section 后的直接写入，以及绕过 `LevelChunk#setBlockState` 但仍使用原版 section API 的模组写入。同值写入不会解冻；只有共享容器中的值确实要变化时才复制。这里不负责按位置安排重新折叠，因为脱离所属区块的 section 本身没有世界坐标。
+
 整个过程不会替换 `LevelChunkSection`，所以无需调用 Lithium 的 `onChunkSectionInvalidated`，也无需维护额外的占位 section 回调表。
 
 ## 群系写路径
@@ -61,15 +63,23 @@
 
 项目仍精确依赖 Lithium 0.21.4；升级 Lithium 前必须重新审查这些内部接口。
 
+## `ImposterProtoChunk` 与 C2ME
+
+`ImposterProtoChunk` 是完整 `LevelChunk` 的包装器，但它在调用 `ProtoChunk`/`ChunkAccess` 父构造器时仍会先创建一整套自己的 section 数组。随后它覆盖 `getSections()` 并返回所包装 `LevelChunk` 的数组；当 `allowWrites=false` 时，`getSection(int)` 却返回父类那套 backing section。因而只沿虚方法 `getSections()` 扫描，会永久漏掉这一份真实占堆的隐藏数组。
+
+本模组在 `ImposterProtoChunk` 构造完成后，通过 `ChunkAccess.sections` 的 accessor 直接取得 backing 数组，绕过 `getSections()` 覆盖，并只折叠这套数组的内部容器。所包装的 `LevelChunk` 仍走原有完整区块路径。若 backing section 后续经 `getSection(int)` 被直接写入，上述 `LevelChunkSection#setBlockState` 通用保护会先解冻；群系原生写路径仍通过 `recreate()` 建立可变容器。
+
+C2ME 0.3.6.0 在完整区块状态中长期保留 `new ImposterProtoChunk(levelChunk, false)`，所以这部分兼容会直接回收 C2ME 所保留包装器的重复 palette/storage。C2ME 自己对 Lithium 的兼容主要处理区块可访问状态追踪；本模组不替换 section 身份，也不触发或绕开该追踪器。真正的 `ProtoChunk` 仍原样保留，异步生成期不参与折叠。
+
 ## 不可变容器
 
 `ImmutablePalettedContainer` 允许读取、序列化、`copy()` 和 `recreate()`，拒绝 `set`、`getAndSet`、`onResize` 与网络反序列化等原地修改操作。`copy()`/`recreate()` 返回普通可变 `PalettedContainer`。
 
-直接绕过 `LevelChunk` 调用 section/palette 修改接口的模组不属于兼容写路径；异常是有意的失败保护，防止一次非法写入污染所有共享该容器的区块。
+直接调用 `LevelChunkSection#setBlockState` 已由通用写时复制保护覆盖。进一步取得 `getStates()` 后直接修改 palette，或通过反射/Unsafe 写私有字段，仍不属于兼容写路径；异常是有意的失败保护，防止一次非法写入污染所有共享该容器的区块。
 
 ## 生命周期与并发边界
 
-- 折叠只针对服务端 `LevelChunk`，不修改 `ProtoChunk`，因此不会介入原版或 C2ME 的并行生成阶段。
+- 折叠只针对服务端 `LevelChunk` 及其 `ImposterProtoChunk` 包装器自己的 backing sections；真正的 `ProtoChunk` 不修改，因此不会介入原版或 C2ME 的并行生成阶段。
 - 待折叠队列按 `ServerLevel` 隔离，在世界卸载时清除；服务端停止时同时清空共享池。
 - 对其他模组的 `LevelChunkSection` 子类一律跳过。
 - 动态维度通过实际 `ServerLevel` 的注册表、高度与 section 数组处理。
@@ -77,12 +87,13 @@
 
 ## 已执行验证
 
-2026-11-11 在 Minecraft 1.21.11、Fabric Loader 0.20.1、Fabric API 0.141.6、Lithium 0.21.4 环境完成：
+2026-11-11 至 2026-11-12 在 Minecraft 1.21.11、Fabric Loader 0.20.1、Fabric API 0.141.6、Lithium 0.21.4 环境完成：
 
 - `compileJava` 与专用服务端真实启动；
 - `AIR`、`CAVE_AIR`、`VOID_AIR` 各自执行“整 section 折叠 → 写入 `STONE` → 写回原空气 → 延迟重折叠”；
 - `/fillbiome` 在 `PLAINS` 与 `DESERT` 等非虚空均匀群系间往返；
 - 4064 高空世界的 `y=2000`、`y=-2000` 写入验证；
-- 同一存档、固定 2 GiB 堆下的优化开/关 A/B 测试。
+- C2ME 0.3.6.0 实际启动、额外区块生成、`y=2000` 方块写入/清除、20,000 个快速刻、保存和干净停服。
+- 4064 高世界中 417 个 `ImposterProtoChunk` backing 数组全部折叠，67 个真实 `ProtoChunk` 保持未折叠。
 
-详细方法和数字见 [BENCHMARK.md](BENCHMARK.md)。
+内存基准采用 2026-11-12 至 2026-11-13 同一生产服务器的四份 heap dump，分别比较未优化、仅 ASBG、仅 Polymer 延迟分配与两项同时开启。所有内存分项均以完整对象集合的联合 retained size 为依据，详细方法、可比性限制与结果见 [BENCHMARK.md](BENCHMARK.md)。
