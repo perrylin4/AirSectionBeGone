@@ -1,7 +1,7 @@
 package com.perry.asbg.mixin;
 
-import com.perry.asbg.section.AirVoidSectionManager;
-import com.perry.asbg.section.LevelChunkSectionStorage;
+import com.perry.asbg.section.ASBGSectionManager;
+import com.perry.asbg.accessor.LevelChunkSectionStorage;
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.state.BlockState;
@@ -49,7 +49,7 @@ public abstract class LevelChunkSectionStorageMixin implements LevelChunkSection
             boolean useLocks,
             CallbackInfoReturnable<BlockState> cir
     ) {
-        AirVoidSectionManager.prepareSectionBlockWrite(
+        ASBGSectionManager.prepareSectionBlockWrite(
                 (LevelChunkSection) (Object) this,
                 x,
                 y,

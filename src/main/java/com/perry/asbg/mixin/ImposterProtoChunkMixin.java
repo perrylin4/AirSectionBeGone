@@ -1,7 +1,7 @@
 package com.perry.asbg.mixin;
 
-import com.perry.asbg.section.AirVoidSectionManager;
-import com.perry.asbg.section.ChunkAccessSectionStorage;
+import com.perry.asbg.section.ASBGSectionManager;
+import com.perry.asbg.accessor.ChunkAccessSectionStorage;
 import net.minecraft.world.level.chunk.ImposterProtoChunk;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,7 +17,7 @@ public abstract class ImposterProtoChunkMixin {
             boolean allowWrites,
             CallbackInfo ci
     ) {
-        AirVoidSectionManager.canonicalizeImposterSections(
+        ASBGSectionManager.canonicalizeImposterSections(
                 wrapped,
                 ((ChunkAccessSectionStorage) this).asbg$getBackingSections()
         );

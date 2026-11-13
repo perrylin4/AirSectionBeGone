@@ -1,6 +1,6 @@
 package com.perry.asbg;
 
-import com.perry.asbg.section.AirVoidSectionManager;
+import com.perry.asbg.section.ASBGSectionManager;
 import com.perry.asbg.section.SectionRefoldScheduler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -17,10 +17,10 @@ public final class AirSectionBeGone implements ModInitializer {
     public void onInitialize() {
         ServerTickEvents.END_WORLD_TICK.register(SectionRefoldScheduler::tick);
         ServerWorldEvents.UNLOAD.register((server, level) -> SectionRefoldScheduler.clear(level));
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> AirVoidSectionManager.clearCaches());
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> ASBGSectionManager.clearCaches());
         LOGGER.info(
                 "AirSectionBeGone initialized for dedicated-server uniform-container deduplication ({})",
-                AirVoidSectionManager.isEnabled() ? "enabled" : "disabled"
+                ASBGSectionManager.isEnabled() ? "enabled" : "disabled"
         );
     }
 }

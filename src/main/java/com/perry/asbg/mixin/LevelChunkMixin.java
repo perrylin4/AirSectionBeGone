@@ -1,6 +1,6 @@
 package com.perry.asbg.mixin;
 
-import com.perry.asbg.section.AirVoidSectionManager;
+import com.perry.asbg.section.ASBGSectionManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -42,7 +42,7 @@ public abstract class LevelChunkMixin {
             CallbackInfo ci
     ) {
         if (level instanceof ServerLevel) {
-            AirVoidSectionManager.canonicalizeAll((LevelChunk) (Object) this);
+            ASBGSectionManager.canonicalizeAll((LevelChunk) (Object) this);
         }
     }
 
@@ -58,7 +58,7 @@ public abstract class LevelChunkMixin {
             int flags,
             CallbackInfoReturnable<BlockState> cir
     ) {
-        AirVoidSectionManager.prepareBlockWrite((LevelChunk) (Object) this, pos, state);
+        ASBGSectionManager.prepareBlockWrite((LevelChunk) (Object) this, pos, state);
     }
 
     @Inject(
@@ -73,6 +73,6 @@ public abstract class LevelChunkMixin {
             int flags,
             CallbackInfoReturnable<BlockState> cir
     ) {
-        AirVoidSectionManager.finishBlockWrite((LevelChunk) (Object) this, pos, state);
+        ASBGSectionManager.finishBlockWrite((LevelChunk) (Object) this, pos, state);
     }
 }

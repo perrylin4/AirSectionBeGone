@@ -1,6 +1,6 @@
 package com.perry.asbg.mixin;
 
-import com.perry.asbg.section.AirVoidSectionManager;
+import com.perry.asbg.section.ASBGSectionManager;
 import net.minecraft.world.level.biome.BiomeResolver;
 import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -19,7 +19,7 @@ public abstract class ChunkAccessMixin {
             CallbackInfo ci
     ) {
         if ((Object) this instanceof LevelChunk chunk) {
-            AirVoidSectionManager.canonicalizeAllBiomes(chunk);
+            ASBGSectionManager.canonicalizeAllBiomes(chunk);
         }
     }
 }

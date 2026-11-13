@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import com.perry.asbg.accessor.LevelChunkSectionStorage;
 import net.caffeinemc.mods.lithium.common.block.BlockStateFlags;
 import net.caffeinemc.mods.lithium.common.block.TrackedBlockStatePredicate;
 import net.caffeinemc.mods.lithium.common.world.section.LithiumSectionData;
@@ -24,13 +26,13 @@ import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.chunk.PalettedContainerFactory;
 import net.minecraft.world.level.chunk.PalettedContainerRO;
 
-public final class AirVoidSectionManager {
+public final class ASBGSectionManager {
     private static final boolean ENABLED = Boolean.parseBoolean(
             System.getProperty("airsectionbegone.enabled", "true")
     );
     private static final Map<Registry<Biome>, SharedRegistryData> SHARED_DATA = new IdentityHashMap<>();
 
-    private AirVoidSectionManager() {
+    private ASBGSectionManager() {
     }
 
     public static boolean isEnabled() {
@@ -199,6 +201,8 @@ public final class AirVoidSectionManager {
             return kind;
         }
 
+        // as palettedContainer not always get bitsPerEntry into 0 upon set/getAndSet
+        // so we still need to check every block state
         for (int y = 0; y < LevelChunkSection.SECTION_HEIGHT; y++) {
             for (int z = 0; z < LevelChunkSection.SECTION_WIDTH; z++) {
                 for (int x = 0; x < LevelChunkSection.SECTION_WIDTH; x++) {
@@ -223,6 +227,8 @@ public final class AirVoidSectionManager {
             return key;
         }
 
+        // as palettedContainer not always get bitsPerEntry into 0 upon set/getAndSet
+        // so we still need to check every biome
         for (int y = 0; y < 4; y++) {
             for (int z = 0; z < 4; z++) {
                 for (int x = 0; x < 4; x++) {

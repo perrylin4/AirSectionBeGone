@@ -1,4 +1,4 @@
-package com.perry.asbg.section;
+package com.perry.asbg.accessor;
 
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.biome.Biome;

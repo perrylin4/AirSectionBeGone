@@ -37,7 +37,7 @@ public final class SectionRefoldScheduler {
     }
 
     public static void tick(ServerLevel level) {
-        if (!AirVoidSectionManager.isEnabled()) {
+        if (!ASBGSectionManager.isEnabled()) {
             return;
         }
 
@@ -76,7 +76,7 @@ public final class SectionRefoldScheduler {
 
             int index = chunk.getSectionIndexFromSectionY(SectionPos.y(candidate.sectionPos()));
             if (index >= 0 && index < chunk.getSections().length
-                    && AirVoidSectionManager.canonicalizeStates(level, chunk.getSection(index))) {
+                    && ASBGSectionManager.canonicalizeStates(level, chunk.getSection(index))) {
                 folded++;
             }
         }
