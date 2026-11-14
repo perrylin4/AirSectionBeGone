@@ -36,8 +36,6 @@ AirSectionBeGone 是一个仅面向专用服务端的 Fabric 1.21.11 内存优�
 ./gradlew build
 ```
 
-可分发 JAR 位于 `build/libs/`。项目不生成或发布 sources JAR。
-
 ## 许可证
 
 [MIT](LICENSE)
