@@ -201,8 +201,9 @@ public final class ASBGSectionManager {
             return kind;
         }
 
-        // as palettedContainer not always get bitsPerEntry into 0 upon set/getAndSet
+        // as palettedContainer won't reduce bitsPerEntry into 0 upon set/getAndSet
         // so we still need to check every block state
+        // bitsPerEntry will only be 0 upon load
         for (int y = 0; y < LevelChunkSection.SECTION_HEIGHT; y++) {
             for (int z = 0; z < LevelChunkSection.SECTION_WIDTH; z++) {
                 for (int x = 0; x < LevelChunkSection.SECTION_WIDTH; x++) {
@@ -227,8 +228,9 @@ public final class ASBGSectionManager {
             return key;
         }
 
-        // as palettedContainer not always get bitsPerEntry into 0 upon set/getAndSet
+        // as palettedContainer won't reduce bitsPerEntry into 0 upon set/getAndSet
         // so we still need to check every biome
+        // bitsPerEntry will only be 0 upon load
         for (int y = 0; y < 4; y++) {
             for (int z = 0; z < 4; z++) {
                 for (int x = 0; x < 4; x++) {
