@@ -3,6 +3,7 @@ package com.perry.asbg.section;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.chunk.PalettedContainer;
 import net.minecraft.world.level.chunk.Strategy;
+import org.jspecify.annotations.NonNull;
 
 /**
  * A zero-bit paletted container whose contents can be read and copied but never changed.
@@ -23,37 +24,46 @@ public final class ImmutablePalettedContainer<T> extends PalettedContainer<T> {
     }
 
     @Override
-    public int onResize(int bits, T value) {
+    public int onResize(int bits, @NonNull T value) {
         throw immutableFailure();
     }
 
     @Override
-    public T getAndSet(int x, int y, int z, T value) {
+    public @NonNull T getAndSet(int x, int y, int z, @NonNull T value) {
+        if (get(x, y, z) == value) {
+            return value;
+        }
         throw immutableFailure();
     }
 
     @Override
-    public T getAndSetUnchecked(int x, int y, int z, T value) {
+    public @NonNull T getAndSetUnchecked(int x, int y, int z, @NonNull T value) {
+        if (get(x, y, z) == value) {
+            return value;
+        }
         throw immutableFailure();
     }
 
     @Override
-    public void set(int x, int y, int z, T value) {
+    public void set(int x, int y, int z, @NonNull T value) {
+        if (get(x, y, z) == value) {
+            return;
+        }
         throw immutableFailure();
     }
 
     @Override
-    public void read(FriendlyByteBuf buffer) {
+    public void read(@NonNull FriendlyByteBuf buffer) {
         throw immutableFailure();
     }
 
     @Override
-    public PalettedContainer<T> copy() {
+    public @NonNull PalettedContainer<T> copy() {
         return super.copy();
     }
 
     @Override
-    public PalettedContainer<T> recreate() {
+    public @NonNull PalettedContainer<T> recreate() {
         return super.recreate();
     }
 

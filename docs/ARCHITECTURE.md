@@ -42,6 +42,8 @@
 6. `RETURN` 处若新状态是三种受支持空气之一，且 section 已经只含空气，则加入延迟折叠队列。
 7. 连续 200 tick 未被非空气写入后，队列重新确认 4096 个状态确实同一种，再换回共享容器。每个世界每 tick 最多完成 64 次折叠，并最多弹出 256 个候选，避免单 tick 尖峰。
 
+待折叠任务同时存放在按 section 位置索引的 `Long2ObjectOpenHashMap` 和按“到期时间、section 位置”排序的 `TreeSet` 中。同一位置最多一个任务；取消不存在的任务只查索引，取消有效任务通过索引取得原节点后以 `O(log n)` 从有序集合中删除，不遍历全部任务，也不留下失效节点。相同到期时间的不同 section 会分别保留，最后一个任务取消后立即释放该世界的队列。
+
 另外，`LevelChunkSection#setBlockState` 的五参数底层重载在 `HEAD` 也有一层通用写时复制保护。它覆盖 `ImposterProtoChunk#getSection()` 暴露 backing section 后的直接写入，以及绕过 `LevelChunk#setBlockState` 但仍使用原版 section API 的模组写入。同值写入不会解冻；只有共享容器中的值确实要变化时才复制。这里不负责按位置安排重新折叠，因为脱离所属区块的 section 本身没有世界坐标。
 
 整个过程不会替换 `LevelChunkSection`，所以无需调用 Lithium 的 `onChunkSectionInvalidated`，也无需维护额外的占位 section 回调表。

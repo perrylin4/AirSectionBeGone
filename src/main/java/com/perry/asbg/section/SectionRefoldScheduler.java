@@ -1,9 +1,11 @@
 package com.perry.asbg.section;
 
-import java.util.HashMap;
-import java.util.IdentityHashMap;
+import com.google.common.collect.MapMaker;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.util.Map;
-import java.util.PriorityQueue;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -13,26 +15,37 @@ public final class SectionRefoldScheduler {
     public static final int MAX_REFOLDS_PER_WORLD_TICK = 64;
     private static final int MAX_QUEUE_POLLS_PER_WORLD_TICK = 256;
 
-    private static final Map<ServerLevel, WorldQueue> WORLD_QUEUES = new IdentityHashMap<>();
+    private static final Map<ServerLevel, WorldQueue> WORLD_QUEUES =
+            new MapMaker().weakKeys().makeMap();
 
     private SectionRefoldScheduler() {
     }
 
     public static void schedule(ServerLevel level, long sectionPos) {
         WorldQueue queue = WORLD_QUEUES.computeIfAbsent(level, ignored -> new WorldQueue());
-        if (queue.dueTimes.containsKey(sectionPos)) {
+        if (queue.bySection.containsKey(sectionPos)) {
             return;
         }
 
-        long dueTime = level.getGameTime() + REFOLD_DELAY_TICKS;
-        queue.dueTimes.put(sectionPos, dueTime);
-        queue.candidates.add(new Candidate(sectionPos, dueTime));
+        Candidate candidate = new Candidate(sectionPos, level.getGameTime() + REFOLD_DELAY_TICKS);
+        queue.bySection.put(sectionPos, candidate);
+        queue.candidates.add(candidate);
     }
 
     public static void cancel(ServerLevel level, long sectionPos) {
         WorldQueue queue = WORLD_QUEUES.get(level);
-        if (queue != null) {
-            queue.dueTimes.remove(sectionPos);
+        if (queue == null) {
+            return;
+        }
+
+        Candidate candidate = queue.bySection.remove(sectionPos);
+        if (candidate == null) {
+            return;
+        }
+
+        queue.candidates.remove(candidate);
+        if (queue.candidates.isEmpty()) {
+            WORLD_QUEUES.remove(level);
         }
     }
 
@@ -53,19 +66,14 @@ public final class SectionRefoldScheduler {
         while (folded < MAX_REFOLDS_PER_WORLD_TICK
                 && polled < MAX_QUEUE_POLLS_PER_WORLD_TICK
                 && !queue.candidates.isEmpty()) {
-            Candidate candidate = queue.candidates.peek();
+            Candidate candidate = queue.candidates.first();
             if (candidate.dueTime() > gameTime) {
                 break;
             }
 
-            queue.candidates.poll();
+            queue.candidates.pollFirst();
+            queue.bySection.remove(candidate.sectionPos());
             polled++;
-
-            Long currentDueTime = queue.dueTimes.get(candidate.sectionPos());
-            if (currentDueTime == null || currentDueTime != candidate.dueTime()) {
-                continue;
-            }
-            queue.dueTimes.remove(candidate.sectionPos());
 
             int chunkX = SectionPos.x(candidate.sectionPos());
             int chunkZ = SectionPos.z(candidate.sectionPos());
@@ -81,7 +89,7 @@ public final class SectionRefoldScheduler {
             }
         }
 
-        if (queue.dueTimes.isEmpty() && queue.candidates.isEmpty()) {
+        if (queue.candidates.isEmpty()) {
             WORLD_QUEUES.remove(level);
         }
     }
@@ -97,12 +105,15 @@ public final class SectionRefoldScheduler {
     private record Candidate(long sectionPos, long dueTime) implements Comparable<Candidate> {
         @Override
         public int compareTo(Candidate other) {
-            return Long.compare(dueTime, other.dueTime);
+            int order = Long.compare(dueTime, other.dueTime);
+            // Sections scheduled in the same tick must remain distinct in the sorted set.
+            return order != 0 ? order : Long.compare(sectionPos, other.sectionPos);
         }
     }
 
     private static final class WorldQueue {
-        private final Map<Long, Long> dueTimes = new HashMap<>();
-        private final PriorityQueue<Candidate> candidates = new PriorityQueue<>();
+        // Both collections hold the same candidate; cancellation removes it immediately.
+        private final Long2ObjectMap<Candidate> bySection = new Long2ObjectOpenHashMap<>();
+        private final NavigableSet<Candidate> candidates = new TreeSet<>();
     }
 }

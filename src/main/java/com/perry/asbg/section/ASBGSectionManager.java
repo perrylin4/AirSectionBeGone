@@ -40,7 +40,7 @@ public final class ASBGSectionManager {
     }
 
     public static void canonicalizeAll(LevelChunk chunk) {
-        if (!ENABLED || !(chunk.getLevel() instanceof ServerLevel level)) {
+        if (!isEnabled() || !(chunk.getLevel() instanceof ServerLevel level)) {
             return;
         }
 
@@ -51,7 +51,7 @@ public final class ASBGSectionManager {
             LevelChunk wrapped,
             LevelChunkSection[] backingSections
     ) {
-        if (!ENABLED || !(wrapped.getLevel() instanceof ServerLevel level)) {
+        if (!isEnabled() || !(wrapped.getLevel() instanceof ServerLevel level)) {
             return;
         }
 
@@ -59,7 +59,7 @@ public final class ASBGSectionManager {
     }
 
     public static void canonicalizeAllBiomes(LevelChunk chunk) {
-        if (!ENABLED || !(chunk.getLevel() instanceof ServerLevel level)) {
+        if (!isEnabled() || !(chunk.getLevel() instanceof ServerLevel level)) {
             return;
         }
 
@@ -69,7 +69,7 @@ public final class ASBGSectionManager {
     }
 
     public static void prepareBlockWrite(LevelChunk chunk, BlockPos pos, BlockState newState) {
-        if (!ENABLED || newState.isAir() || !(chunk.getLevel() instanceof ServerLevel level)) {
+        if (!isEnabled() || newState.isAir() || !(chunk.getLevel() instanceof ServerLevel level)) {
             return;
         }
 
@@ -89,7 +89,7 @@ public final class ASBGSectionManager {
             int z,
             BlockState newState
     ) {
-        if (!ENABLED || !(section.getStates() instanceof ImmutablePalettedContainer<?>)
+        if (!isEnabled() || !(section.getStates() instanceof ImmutablePalettedContainer<?>)
                 || section.getBlockState(x, y, z) == newState) {
             return;
         }
@@ -98,7 +98,7 @@ public final class ASBGSectionManager {
     }
 
     public static void finishBlockWrite(LevelChunk chunk, BlockPos pos, BlockState newState) {
-        if (!ENABLED || AirKind.fromState(newState) == null
+        if (!isEnabled() || AirKind.fromState(newState) == null
                 || !(chunk.getLevel() instanceof ServerLevel level)) {
             return;
         }
@@ -117,7 +117,7 @@ public final class ASBGSectionManager {
     }
 
     static boolean canonicalizeStates(ServerLevel level, LevelChunkSection section) {
-        if (!ENABLED || section.getClass() != LevelChunkSection.class
+        if (!isEnabled() || section.getClass() != LevelChunkSection.class
                 || section.getStates() instanceof ImmutablePalettedContainer<?>
                 || !section.hasOnlyAir()) {
             return false;
@@ -138,7 +138,7 @@ public final class ASBGSectionManager {
     }
 
     static void canonicalizeBiomes(ServerLevel level, LevelChunkSection section) {
-        if (!ENABLED || section.getClass() != LevelChunkSection.class
+        if (!isEnabled() || section.getClass() != LevelChunkSection.class
                 || section.getBiomes() instanceof ImmutablePalettedContainer<?>) {
             return;
         }
