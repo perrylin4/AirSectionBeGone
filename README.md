@@ -1,6 +1,6 @@
-# AirSectionBeGone
+# AirBeGone
 
-AirSectionBeGone 是一个仅面向专用服务端的 Fabric 1.21.11 内存优化模组。他优化了LevelChunkSection、PoiSction以及HeightMap的内存占用
+AirBeGone 是一个仅面向专用服务端的 Fabric 1.21.11 内存优化模组。他优化了LevelChunkSection、PoiSction以及HeightMap的内存占用
 
 这个mod 99% 是GPT6.1和6.2sol生成，架构由6 Astra和6.2Astra做。后续由本人进行长达17h的review确保没有显著问题。接下来会在生产环境(ISLANDS各子服)运行来确保没有显著问题。
 
@@ -34,9 +34,9 @@ POI 缓存只保存实际的 `PoiSection`，已加载但为空的 section 由区
 - 绕过所属区块直接改变共享容器中的值会抛出 `UnsupportedOperationException`；同值写入允许返回原值。`copy()` 与 `recreate()` 返回 palette 独立的普通可变容器。
 - 不改变区块磁盘格式或网络格式；移除模组后仍可由原版格式正常读取。
 
-九场景测试覆盖虚空、原版地形和超平坦。开启 ASBG 后，标准高度的全堆可达对象占用下降 **1.26%–1.75%**，1024 高下降 **3.40%–4.16%**，4064 高下降 **11.62%–13.34%**。各场景的内存、MSPT、兼容性证据和实现细节见 [实现、兼容性与性能报告](docs/BENCHMARK.md)。
+九场景测试覆盖虚空、原版地形和超平坦。开启 AirBeGone 后，标准高度的全堆可达对象占用下降 **1.26%–1.75%**，1024 高下降 **3.40%–4.16%**，4064 高下降 **11.62%–13.34%**。各场景的内存、MSPT、兼容性证据和实现细节见 [实现、兼容性与性能报告](docs/BENCHMARK.md)。
 
-诊断或复测时可用 JVM 参数 `-Dairsectionbegone.enabled=false` 关闭全部优化。容器共享、高度图去重和 POI 稀疏缓存都跟随该总开关。
+诊断或复测时可用 JVM 参数 `-Dairbegone.enabled=false` 关闭全部优化。旧参数 `-Dairsectionbegone.enabled=false` 仍可用。容器共享、高度图去重和 POI 稀疏缓存都跟随该总开关。
 
 ## 构建
 
@@ -51,7 +51,7 @@ POI 缓存只保存实际的 `PoiSection`，已加载但为空的 section 由区
 ./gradlew runPoiTestServer -PpoiIntegrationTest -PpoiTestStage=reload
 ```
 
-运行前需要在 `build/poi-integration/` 准备测试服的 `eula.txt` 和 `server.properties`；测试服应仅绑定本机。两次运行必须使用同一个测试目录；`write` 会重置测试用的 POI 点位和占用状态，可重复运行。测试完成后自动停服，并由 Gradle 检查结果文件。可用 `-PpoiTestRunDir=build/poi-integration/compat` 指定独立目录，在该目录的 `mods/` 中放入兼容性测试模组。使用 `-PpoiTestOptimize=false` 关闭测试服的 ASBG 总开关，验证原版 POI 条目数量。开启优化时还会运行共享副本隔离、折叠扫描预算和无效写入入队检查。测试模组不会进入分发 JAR。
+运行前需要在 `build/poi-integration/` 准备测试服的 `eula.txt` 和 `server.properties`；测试服应仅绑定本机。两次运行必须使用同一个测试目录；`write` 会重置测试用的 POI 点位和占用状态，可重复运行。测试完成后自动停服，并由 Gradle 检查结果文件。可用 `-PpoiTestRunDir=build/poi-integration/compat` 指定独立目录，在该目录的 `mods/` 中放入兼容性测试模组。使用 `-PpoiTestOptimize=false` 关闭测试服的 AirBeGone 总开关，验证原版 POI 条目数量。开启优化时还会运行共享副本隔离、折叠扫描预算和无效写入入队检查。测试模组不会进入分发 JAR。
 
 ## 许可证
 

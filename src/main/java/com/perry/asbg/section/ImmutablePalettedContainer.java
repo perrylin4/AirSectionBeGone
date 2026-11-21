@@ -71,7 +71,7 @@ public final class ImmutablePalettedContainer<T> extends PalettedContainer<T> {
 
     private static UnsupportedOperationException immutableFailure() {
         return new UnsupportedOperationException(
-                "Attempted to modify an AirSectionBeGone shared immutable PalettedContainer"
+                "Attempted to modify an AirBeGone shared immutable PalettedContainer"
         );
     }
 }

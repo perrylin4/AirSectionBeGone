@@ -39,8 +39,8 @@ tasks.named('test') {
 if (providers.gradleProperty('poiIntegrationTest').isPresent()) {
 	loom {
 		mods {
-			'airsectionbegone' { sourceSet sourceSets.main }
-			'asbg-poi-test' { sourceSet sourceSets.test }
+			'airbegone' { sourceSet sourceSets.main }
+			'airbegone-poi-test' { sourceSet sourceSets.test }
 		}
 		runs {
 			poiTestServer {
@@ -50,7 +50,7 @@ if (providers.gradleProperty('poiIntegrationTest').isPresent()) {
 				vmArgs '-Xms256m', '-Xmx2G',
 						"-Dasbg.poiTest.stage=${providers.gradleProperty('poiTestStage').getOrElse('write')}",
 						"-Dasbg.poiTest.requireC2me=${providers.gradleProperty('poiTestRequireC2me').getOrElse('false')}",
-						"-Dairsectionbegone.enabled=${providers.gradleProperty('poiTestOptimize').getOrElse('true')}"
+						"-Dairbegone.enabled=${providers.gradleProperty('poiTestOptimize').getOrElse('true')}"
 				programArgs 'nogui'
 			}
 		}

@@ -1,10 +1,10 @@
-# ASBG 九场景兼容性、内存与 MSPT 测试手册
+# AirBeGone 九场景兼容性、内存与 MSPT 测试手册
 
 ## 1. 交付目标
 
 执行者负责搭建、运行、排错、抓堆和分析，交付九行对照结果与原始证据。本文件是执行说明。历史报告中的数字不能填入本轮结果。
 
-每个场景用同一份关闭状态的母档制作两个副本。**ON** 和 **OFF** 都安装同一个 ASBG JAR 和同一套模组，唯一区别是游戏服务器 JVM 的 `-Dairsectionbegone.enabled=true|false`。开关在类初始化时读取，每次换组启动独立 JVM。这个对照测量“启用 ASBG 的收益”。OFF 仍加载 Mixin、类和实例字段，其结果不能标成“卸载 ASBG”或“纯原版服务端”。
+每个场景用同一份关闭状态的母档制作两个副本。**ON** 和 **OFF** 都安装同一个 AirBeGone JAR 和同一套模组，唯一区别是游戏服务器 JVM 的 `-Dairbegone.enabled=true|false`。开关在类初始化时读取，每次换组启动独立 JVM。这个对照测量“启用 AirBeGone 的收益”。OFF 仍加载 Mixin、类和实例字段，其结果不能标成“卸载 AirBeGone”或“纯原版服务端”。
 
 最低交付量为 **9 份母档、18 个独立运行目录、18 次 write、18 次同组重启 reload、18 个来自 spark 的可分析 HPROF**。每组每次重复都从对应母档重新复制。功能覆盖、性能采样和抓堆可以分阶段；每个场景的两组都要走全套公共工作负载。对照组只切换与内存表示有关的断言。若另外用插桩 JVM 收集覆盖率，运行次数另计。
 
@@ -28,14 +28,14 @@ normal-1024/4064 只扩展维度的可建造范围，继续使用原版 overworl
 
 ## 3. 固定软件环境
 
-1. 工作仓库为 `D:\minecraft\mods-develop\AirSectionBeGone`。先记录 Git HEAD、分支、工作树差异及参与构建的未跟踪源文件哈希。当前仓库有未提交修改，测试应使用实际工作树。新建独立批次目录，例如 `build/review/asbg-matrix/<批次>/`，分设 `templates/`、`seeds/`、`runs/`、`analysis/`、`coverage/`。旧测试、历史基准和生产存档不能充当可写运行目录。不要对包含历史 HPROF 的工作区执行 Gradle clean。
-2. 使用 Gradle Wrapper。在仓库根执行 `.\gradlew.bat --offline --console=plain build`，保存日志及 `build/test-results/test`。记录测试用例名称和通过数。当前基线为 12 项。保存本轮正式 `build/libs/airsectionbegone-0.1.0.jar` 的 SHA-256。
+1. 从 AirBeGone 仓库根目录开始。先记录 Git HEAD、分支、工作树差异及参与构建的未跟踪源文件哈希。当前仓库有未提交修改，测试应使用实际工作树。新建独立批次目录，例如 `build/review/asbg-matrix/<批次>/`，分设 `templates/`、`seeds/`、`runs/`、`analysis/`、`coverage/`。旧测试、历史基准和生产存档不能充当可写运行目录。不要对包含历史 HPROF 的工作区执行 Gradle clean。
+2. 使用 Gradle Wrapper。在仓库根执行 `.\gradlew.bat --offline --console=plain build`，保存日志及 `build/test-results/test`。记录测试用例名称和通过数。当前基线为 12 项。保存本轮正式 `build/libs/airbegone-0.1.0.jar` 的 SHA-256。
 3. 可复用的已知组合为 Minecraft 1.21.11、Fabric Loader 0.19.3、Fabric API 0.141.6+1.21.11、Lithium 0.21.4、C2ME 0.3.6.0.0、FerriteCore 8.2.0、ServerCore 1.5.15、spark 1.10.170。沿用本机可用的 Java 25，记录 vendor、完整 build、GC、JVM 参数。目标分发字节码为 Java 21。每个场景同时装齐这些模组和下一项 Polymer。
 4. **Polymer 必须取本地 lithium-compat 项目**。当前产物为 `D:\minecraft\mods-develop\polymer-lithium-0.21.4-compat\build\libs\polymer-bundled-0.15.2+1.21.11.jar`。编写手册时该文件 SHA-256 为 `3273E216870A9E83762A4BE81BB12B104825E8B539D08186D1D04942314331B1`，仓库 HEAD 短号为 `74f9bed5`。执行时再次核对本地产物、复制件和实际启动目录。若源码后来更新，记录新提交、工作树状态和哈希，整个批次用同一个新文件。同名的公开发行版、sources JAR、dev JAR 都不能替代。
 5. 当前本机其他模组的候选位置是 `build/review/heightmap-bench/normal-shared/mods/`。Loom 可能从 Gradle classpath 加载 Lithium 和 Fabric API，独立 Fabric 服务端需要把相应正式 JAR 纳入实例。保留 Loader 展开的模组清单，排除同一模组重复加载。所有 ON/OFF 配对比较模组哈希、测试模组哈希、datapack 哈希和配置文件。
-6. 主矩阵优先使用**正式 Fabric dedicated server + remap 后的 ASBG、Polymer、测试驱动 JAR**。IDE/Loom 的 named 环境适合开发夹具。正式环境特别要验证 Polymer 的 Lithium palette 包装实际命中，其本地 Mixin 使用 `remap=false, require=0`，单凭“Done”日志无法证明发包兼容。测试驱动若通过反射访问原版字段，先用针对本版的 accessor/invoker 或 Fabric 映射解析实际名称；将 named 环境中的 `getDeclaredField("data")` 等字符串直接搬入生产命名空间会误报。
+6. 主矩阵优先使用**正式 Fabric dedicated server + remap 后的 AirBeGone、Polymer、测试驱动 JAR**。IDE/Loom 的 named 环境适合开发夹具。正式环境特别要验证 Polymer 的 Lithium palette 包装实际命中，其本地 Mixin 使用 `remap=false, require=0`，单凭“Done”日志无法证明发包兼容。测试驱动若通过反射访问原版字段，先用针对本版的 accessor/invoker 或 Fabric 映射解析实际名称；将 named 环境中的 `getDeclaredField("data")` 等字符串直接搬入生产命名空间会误报。
 7. 固定 C2ME 异步配置，建议沿用之前验证过的 `gcFreeChunkSerializer=true`；记录配置和启动时实际启用的模块。Lithium 的 section data、POI、palette 和高度图相关优化按本地兼容组合开启。保留 Polymer 延迟分配、ServerCore 配置和 spark 命令，两组一致。扩展诊断若单独关闭某一模块，应另开目录，不能并入主矩阵。
-8. 本机回环监听、唯一 runDir、逐个启动，锁定玩家数、视距和模拟距离（建议均为 2，主要加载量用固定票控制）、种子 `20261115`、难度和游戏规则。固定 20 TPS、相同堆大小与 GC；可先用 4064 OFF 校准内存预算，再固定整个批次。统一时段、天气、随机刻和生物生成策略，记录所有显式调整。采样时关闭 spark 后台采样器、覆盖率探针和调试导出。提前按试跑时最大的 dump × 18 加分析器索引、存档副本和重试余量检查空间。每个 JVM 用启动命令、系统属性和 ASBG 启动日志三方核对开关。
+8. 本机回环监听、唯一 runDir、逐个启动，锁定玩家数、视距和模拟距离（建议均为 2，主要加载量用固定票控制）、种子 `20261115`、难度和游戏规则。固定 20 TPS、相同堆大小与 GC；可先用 4064 OFF 校准内存预算，再固定整个批次。统一时段、天气、随机刻和生物生成策略，记录所有显式调整。采样时关闭 spark 后台采样器、覆盖率探针和调试导出。提前按试跑时最大的 dump × 18 加分析器索引、存档副本和重试余量检查空间。每个 JVM 用启动命令、系统属性和 AirBeGone 启动日志三方核对开关。
 
 ## 4. 制作与验收九份母档
 
@@ -47,7 +47,7 @@ normal-1024/4064 只扩展维度的可建造范围，继续使用原版 overworl
 
 ## 5. 测试驱动与可重复运行
 
-现有 `src/test/java/com/perry/asbg/test/` 可复用断言。另建测试专用的 matrix 驱动和 Fabric 入口，两组用同一二进制；不把诊断 Mixins 打进正式 ASBG。下列限制必须在开始批跑前处理。
+现有 `src/test/java/com/perry/asbg/test/` 可复用断言。另建测试专用的 matrix 驱动和 Fabric 入口，两组用同一二进制；不把诊断 Mixins 打进正式 AirBeGone。下列限制必须在开始批跑前处理。
 
 - `PoiIntegrationTest` 在 `SERVER_STARTED` 同步运行并在 finally 中立即停服，`probe-poi` 固定采用 `LevelHeightAccessor.create(-352,1728)`，断言写死 108 段和边界。改为注入当前世界的实际高度，按 `height/16` 计算，所有越界夹具改用动态边界。同时测实际 `level.getPoiManager()`。独立 PoiManager 便于精确计数；只跑它无法证明真实世界联动。
 - `SectionIntegrationChecks` 在 OFF 时会立即返回，而且原来的固定 sections 在 normal 世界可能已有非空气地形。按矩阵共用脚本执行同样的写入、查询、保存与发包，先创建并核对已知初态的夹具。只有共享对象身份、内部计数器和预期异常等实现断言按 ON/OFF 分支。旧测试直接推进游戏时间、清空调度器的操作限于隔离功能夹具；采样世界靠真实 tick 推进。
@@ -60,7 +60,7 @@ normal-1024/4064 只扩展维度的可建造范围，继续使用原版 overworl
 ```powershell
 # 已在该组独立 runDir 中，且已准备两组相同的 mods、配置、世界副本
 # $java、$launcher、$heap、$enabled、$scenario、$stage、$runId 由本批次清单提供
-& $java "-Xms$heap" "-Xmx$heap" "-Dairsectionbegone.enabled=$enabled" `
+& $java "-Xms$heap" "-Xmx$heap" "-Dairbegone.enabled=$enabled" `
     "-Dasbg.matrix.scenario=$scenario" "-Dasbg.matrix.stage=$stage" `
     "-Dasbg.matrix.runId=$runId" -jar $launcher nogui
 ```
@@ -92,7 +92,7 @@ normal-1024/4064 只扩展维度的可建造范围，继续使用原版 overworl
 | P2 实际 POI | 在实际世界放置职业站点、下界传送门 POI 的可控夹具，按实际注册与更新时机等待；执行查找、最近、占用、释放、重新占用、移除。对独立管理器再做旧 section 被空列覆盖、迭代移除、批量移除和清空。 | 核对 POI 类型、半径查询结果、可用票、已移除点、加载列计数和 Lithium 位图；保存后重启先读票再释放。触发真实 C2ME unload，检查 loaded、pending、ready 和 Lithium 索引的清理。保留一批主测区 POI 已知空列和至少一个活跃 PoiSection 到抓堆。 |
 | M1 Polymer 索引 | 在主测区指定 section 放置一个测试专用 Polymer 方块，再放一个有同步光照行为的方块，触发登记、区块发送、移除、重放。用观察接口检查位置集合、迭代和 lights 标记；在同内容邻段检查隔离。 | 从未登记的 section 保持延迟分配，登记后索引只包含正确局部坐标。移除后内容和需要刷新光照标记正确，已分配过的空集合允许保留。不能只用普通石头推断 Polymer 接口已工作。 |
 | M2 Polymer × Lithium 发包 | 在真实 section 内放入足够多种状态，沿 Lithium palette 的实际选择路径进入 `LithiumHashPalette`，保留一个应映射到不同客户端方块状态的 Polymer 方块。构造真实接收者的 PacketContext 并走区块发包与编码；优先让一个测试客户端实际接收、解码并记录。另测折叠后首次写和再次发包。 | 用运行时 palette 类和命中证据确认本地 `lithium_BlockPaletteMixin` 的服务端 `getSerializedSize`、`write` 都执行，实写长度与预测一致，解码后的展示状态正确，服务端原态未变。只做了服务端编码/解码时，在报告中明确实际覆盖边界。 |
-| M3 跨模组运行路径 | 保持 C2ME、Lithium、FerriteCore、ServerCore 和本地 Polymer 同时在场。已生成块读盘、新区域生成、释放票、卸载、存盘、重启、再次加载；同时保留方块、群系、四类高度图、POI 和同步方块断言。 | 核对异步任务完成、保存后稳定摘要一致。对 `require=0` 的 ASBG 快照及 Lithium POI 注入给出行为或注入指令证据。导出过 Mixin 字节码只能证明注入，仍需行为断言。 |
+| M3 跨模组运行路径 | 保持 C2ME、Lithium、FerriteCore、ServerCore 和本地 Polymer 同时在场。已生成块读盘、新区域生成、释放票、卸载、存盘、重启、再次加载；同时保留方块、群系、四类高度图、POI 和同步方块断言。 | 核对异步任务完成、保存后稳定摘要一致。对 `require=0` 的 AirBeGone 快照及 Lithium POI 注入给出行为或注入指令证据。导出过 Mixin 字节码只能证明注入，仍需行为断言。 |
 
 单元测试补充哈希碰撞、集合迭代和异常等边界。对无法在主配置出现的条件分支（如关闭 Lithium ai.poi、自定义已加载列集合、无注册表 key 的 Holder、启动时缺少必要 Lithium 注入），使用另外的隔离单测或负向夹具。记录预期失败、跳过原因和所在源码行，不能让负向启动配置混入 18 份正式快照。
 
@@ -102,7 +102,7 @@ normal-1024/4064 只扩展维度的可建造范围，继续使用原版 overworl
 - 另选 chunk (202,200) 的局部 (8,8) 做高度图。准备无悬空地物的列，在 Y=h 放石头，取 h 为 `maxExclusive-48`。四类图的 firstAvailable 初值均为 h+1。在 h+1 放水，WORLD_SURFACE 和 MOTION_BLOCKING 为 h+2，OCEAN_FLOOR 为 h+1；换树叶时 MOTION_BLOCKING_NO_LEAVES 为 h+1；拆掉顶层后回到 h+1。先在地下做一次不会抬高该列的写入以覆盖“不解共享”分支。流体/树叶的延迟更新用相同的 tick 步调，避免读到邻居更新后的另一个状态。指定有顶块的持久化哨兵另选一列。
 - S5 以 `SectionPos` 求完整 16 格高的目标 section，用闭区间方块边界调用 `fillbiome`；再选择横跨 x=3215/3216 的小区域，按原版 quart 对齐规则计算应改变的格数。比较两侧边界内外和完全未动的第三个区块。实际留存整段 64 个格子的修改前、后及重启后 key。
 - 稳态编辑的 16 个区块可用 x=204..207、z=202..205。每块两列：一列在事先建好的实心顶下切换 STONE/AIR，一列在固定石锚点上切换 GLASS/AIR。地表目标初始为 AIR，地下目标初态也显式定为 AIR。偶数 tick 放入、奇数 tick 移走，按相同索引顺序执行，1000 tick 后回到初态。每列都只在自己的区块内部，功能测试的 A/B、POI、Polymer 位置另行保留。
-- S6 记录候选的实际 `dueTime` 和 `sectionPos` 排序；每次删最后一个非空气块后才检查 refold。直接调 section setter 与经 LevelChunk 写回的入队路径分别取证。需要人为注入失效队列项的预算试验放在诊断夹具中，避免在 OFF 性能组主动调用 ASBG 内部 `schedule` 而制造原本不会有的队列。
+- S6 记录候选的实际 `dueTime` 和 `sectionPos` 排序；每次删最后一个非空气块后才检查 refold。直接调 section setter 与经 LevelChunk 写回的入队路径分别取证。需要人为注入失效队列项的预算试验放在诊断夹具中，避免在 OFF 性能组主动调用 AirBeGone 内部 `schedule` 而制造原本不会有的队列。
 - 对每个用例先发出 `case-start`，结束时发出 `case-end`，附 `scenario,group,stage,attempt,caseId,logicalDigest,assertions,status`。公共摘要按 section 坐标、局部坐标和资源 key 排序，排除对象地址、票 ID、时间戳和迭代顺序。在收集矩阵时检查每个场景 S1–S6、H1–H3、P1–P2、M1–M3 共 14 个用例族都有结果；同组某项仅在单元测试有证据，应标出缺少的实服路径。
 
 ## 8. 性能与 spark 抓堆
@@ -127,9 +127,9 @@ normal-1024/4064 只扩展维度的可建造范围，继续使用原版 overworl
 | 全堆 | 全部 GC 可达对象的去重字节数、对象数、尺寸模型。单列 JVM heap used、RSS 或 dump 文件大小如有，仅供诊断。 |
 | section 和容器 | 所有目标 section 的联合 retained size；分列完整区块、wrapper 私有 backing、真实 ProtoChunk 的范围。追踪 states/biomes、可变与共享容器、内部 palette/storage/锁、Lithium SectionData/两类计数数组。用对象集去重；包含静态共享缓存的归因需把对应池和代表加入联合集合。 |
 | 高度图 | FULL 的 Heightmap、私有 BitStorage、SharedHeightmapStorage、各自 long[]、弱共享池/条目。通过拥有者引用限定类型。记录唯一内容数、共享代表数及已解共享数；弱池的开销计入 ON。 |
-| POI、Polymer、调度 | 按真实 PoiManager 和其 map/ready/loaded/Lithium columns/BitSet 路径筛选，另列隔离测试 manager 是否已释放。Polymer 的 ShortOpenHashSet 与 short[] 按 section 字段来路统计；全 JVM 同名类还用于其他业务。计入 ASBG 注册表共享数据、队列、候选等额外保留对象。 |
+| POI、Polymer、调度 | 按真实 PoiManager 和其 map/ready/loaded/Lithium columns/BitSet 路径筛选，另列隔离测试 manager 是否已释放。Polymer 的 ShortOpenHashSet 与 short[] 按 section 字段来路统计；全 JVM 同名类还用于其他业务。计入 AirBeGone 注册表共享数据、队列、候选等额外保留对象。 |
 
-各对象族均对**完整对象集合**求联合 retained size，保存查询、对象数、结果原始字节和一条代表性引用链。不要把各实例 retainedBytes 相加，不要把父集合和子集合相加，也不要按直方图 shallow size × 数量估算。若要给出 ASBG 相关总量，在分析器中对选定对象 ID 的并集重新计算 retained；分析器无法计算时只给独立分项和全堆。ON 的静态池可能从另一条根路径保留共享对象，单看 chunk 自身的 retained 会夸大节省。逻辑内容比较避免调用会改变运行时状态的 getter，可在离线 dump 中读取数组内容。
+各对象族均对**完整对象集合**求联合 retained size，保存查询、对象数、结果原始字节和一条代表性引用链。不要把各实例 retainedBytes 相加，不要把父集合和子集合相加，也不要按直方图 shallow size × 数量估算。若要给出 AirBeGone 相关总量，在分析器中对选定对象 ID 的并集重新计算 retained；分析器无法计算时只给独立分项和全堆。ON 的静态池可能从另一条根路径保留共享对象，单看 chunk 自身的 retained 会夸大节省。逻辑内容比较避免调用会改变运行时状态的 getter，可在离线 dump 中读取数组内容。
 
 **合格配对**要求同一母档、同模组与配置、同测区坐标、相同成功编辑数和逻辑内容，运行时高度、FULL 数量及持久化哨兵一致。对 wrapper、真实 ProtoChunk、POI 已载列和非空气统计逐项比对。异步遗留对象或外围加载量不同，先找根路径、统一等待/票和工作量，再从母档重试。仍有差异时单列“受加载量影响”，可提供匹配坐标的分项，不能用粗略每区块平均冒充等负载整堆结果。
 
@@ -139,7 +139,7 @@ normal-1024/4064 只扩展维度的可建造范围，继续使用原版 overworl
 
 - 先列出 `src/main/java/com/perry/asbg` 全部生产类、Mixins、事件入口、每个重要分支和对应 S/H/P/M 用例。逐场景记录命中、预期值、实测值、证据文件。覆盖率可另跑同版本诊断副本，用 JaCoCo 或等价工具产出行/分支报告；对未插桩的正式基准不声称测出了行覆盖率。
 - Mixin handler 合入 Minecraft 类，普通只收集 `com.perry.asbg.*` 的覆盖率会遗漏它们。诊断运行需验证插桩顺序、导出实际转换后的目标类与行号映射，或使用测试专用命中计数与行为断言补证。分别列出“可精确计算的行/分支覆盖”“已证明执行的 Mixin handler”“仅静态审查”“未覆盖及原因”。不要把类成功加载、方法被注册或同名源码行自动算为命中。实际只能在关闭组或故障配置命中的分支注明所属组。
-- 每个失败附 runId、版本哈希、坐标和初态、命令/调用路径、第一处错误与后续异常。预期的异常限于指定夹具。对启动时可选注入未命中、异步线程错误、chunk 保存失败或 Polymer 展示状态不符逐项归因。若修复了 ASBG、测试驱动或依赖，分批留档；最终对照表两侧必须来自同一修订与测试规程。
+- 每个失败附 runId、版本哈希、坐标和初态、命令/调用路径、第一处错误与后续异常。预期的异常限于指定夹具。对启动时可选注入未命中、异步线程错误、chunk 保存失败或 Polymer 展示状态不符逐项归因。若修复了 AirBeGone、测试驱动或依赖，分批留档；最终对照表两侧必须来自同一修订与测试规程。
 - 交付 `manifest.json`（含母档、JAR、配置、种子、JVM、runId）、`actions.jsonl`、`checks.json`、`ticks.csv`、`heap-index.csv`、逐堆分析 JSON、覆盖矩阵、完整日志和九场景 Markdown 报告。将实验原始证据写入对应批次目录，将当前实现的结果汇总到 [性能报告](BENCHMARK.md)。
 - **最终表每行一个场景**。列出实际 min/max、ON/OFF 运行 ID、FULL/wrapper/Proto 数、公共断言及内部断言状态、离线可读的两份 dump 链接、全堆 OFF/ON MiB 与差值/百分比、section/heightmap/POI 联合 retained 分项、静置/首次写/稳态 MSPT、异常或噪声说明。补一张专表说明每个环境最主要的内存来源与性能代价。
 - 结束前机械核对九个指定 ID 各有且仅有一对被选入主表的有效运行，18 份正式 HPROF 能打开且哈希与索引相符，18 个 write→reload 结果链完整，所有声明 PASS 的功能都有两组相应证据。未满足项保留空值和阻碍原因，不用以前的 dump、其他地形或推算值补齐。

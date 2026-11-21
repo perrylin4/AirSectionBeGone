@@ -30,7 +30,7 @@ C2ME 0.3.6.0.0 的 POI 卸载会先保存并移除 section，再调用原版 loa
 
 ## 开关与验证
 
-默认开启，跟随 `-Dairsectionbegone.enabled` 总开关；设为 false 会关闭本模组全部优化。测试参数 `-PpoiTestOptimize=false` 也传递这个总开关。
+默认开启，跟随 `-Dairbegone.enabled` 总开关；设为 false 会关闭本模组全部优化。测试参数 `-PpoiTestOptimize=false` 也传递这个总开关。
 
 运行 C2ME 兼容性测试时传入 `-PpoiTestRequireC2me=true`。写入和重启读取两个阶段都会检查实际卸载入口，缺失时测试失败。
 
@@ -38,4 +38,4 @@ C2ME 0.3.6.0.0 的 POI 卸载会先保存并移除 section，再调用原版 loa
 
 该测试用于验证 POI 功能。当前实现的内存对照采用九场景中的实际世界 `PoiManager`，详见 [九场景报告的内存分析](BENCHMARK.md#全堆与各对象族)。
 
-2026-11-15 功能验证：6 个单元测试通过；Lithium 0.21.4 单独、Lithium + C2ME 0.3.6.0.0 + FerriteCore 8.2.0 + ServerCore 1.5.15，以及关闭 Lithium ai.poi 的配置均通过写入与重启读取。另以关闭 ASBG POI 优化的四模组组合完成对照测试。相同的最初 200 个空列对应原版 map 的 21,600 条记录，稀疏 map 为 0 条；列完成标记和 Lithium 位图仍正常保留。测试环境为 Fabric Loader 0.19.3、Java 25，分发字节码目标为 Java 21；测试模组不进入分发 JAR。
+2026-11-15 功能验证：6 个单元测试通过；Lithium 0.21.4 单独、Lithium + C2ME 0.3.6.0.0 + FerriteCore 8.2.0 + ServerCore 1.5.15，以及关闭 Lithium ai.poi 的配置均通过写入与重启读取。另以关闭 AirBeGone POI 优化的四模组组合完成对照测试。相同的最初 200 个空列对应原版 map 的 21,600 条记录，稀疏 map 为 0 条；列完成标记和 Lithium 位图仍正常保留。测试环境为 Fabric Loader 0.19.3、Java 25，分发字节码目标为 Java 21；测试模组不进入分发 JAR。

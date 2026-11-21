@@ -1,10 +1,10 @@
-# AirSectionBeGone 实现、兼容性与性能报告
+# AirBeGone 实现、兼容性与性能报告
 
-AirSectionBeGone（ASBG）是 Minecraft 1.21.11 专用服务端的 Fabric 内存优化模组。它共享完整区块中的空气方块容器、均匀群系容器和内容相同的高度图存储，并将已加载但缺少 POI 数据的高度段改为稀疏缓存。
+AirBeGone是 Minecraft 1.21.11 专用服务端的 Fabric 内存优化模组。它共享完整区块中的空气方块容器、均匀群系容器和内容相同的高度图存储，并将已加载但缺少 POI 数据的高度段改为稀疏缓存。
 
 ## 结果摘要
 
-2026-11-20 的九场景测试覆盖虚空、原版地形和超平坦。每对从同一母档复制，使用相同的优化模组，只切换 ASBG。标准高度全堆节省 **1.26%–1.75%**，1024 高节省 **3.40%–4.16%**，4064 高节省 **11.62%–13.34%**。
+2026-11-20 的九场景测试覆盖虚空、原版地形和超平坦。每对从同一母档复制，使用相同的优化模组，只切换 AirBeGone。标准高度全堆节省 **1.26%–1.75%**，1024 高节省 **3.40%–4.16%**，4064 高节省 **11.62%–13.34%**。
 
 九场景的静置平均 MSPT 差值为 **−0.025 至 +0.043 ms**，稳态编辑差值为 **−0.041 至 +0.103 ms**。普通地形的三档高度中，集中首次写入的单个 tick 多耗时 **3.477–5.856 ms**。每个场景最终采用一对有效运行，稳态数据用于描述该轮观测，首次写入数据用于观察单个批量写入 tick 的成本。
 
@@ -15,14 +15,14 @@ AirSectionBeGone（ASBG）是 Minecraft 1.21.11 专用服务端的 Fabric 内存
 | 项目 | 本轮配置 |
 | --- | --- |
 | 游戏与加载器 | Minecraft 1.21.11、Fabric Loader 0.19.3、Fabric API 0.141.6+1.21.11 |
-| Java 与 JVM | Azul Zulu 25.0.4.1、G1 GC、`-Xms2G -Xmx2G -XX:ActiveProcessorCount=6`。ASBG 分发字节码目标为 Java 21 |
-| ASBG | 正式重映射 `airsectionbegone-0.1.0.jar`，SHA-256 为 `742766bd14c1a6dbc91df805d61c71f331bf65ffa8abd4fba5190ecd06e5e68e` |
+| Java 与 JVM | Azul Zulu 25.0.4.1、G1 GC、`-Xms2G -Xmx2G -XX:ActiveProcessorCount=6`。AirBeGone 分发字节码目标为 Java 21 |
+| 更名前的测试产物 | 正式重映射 `airsectionbegone-0.1.0.jar`，SHA-256 为 `742766bd14c1a6dbc91df805d61c71f331bf65ffa8abd4fba5190ecd06e5e68e` |
 | 优化模组 | Lithium 0.21.4、C2ME 0.3.6.0.0、FerriteCore 8.2.0、ServerCore 1.5.15。C2ME 的 `gcFreeChunkSerializer` 开启 |
 | Polymer | 本地 `lithium-compat` 的 Polymer Bundle 0.15.2+1.21.11，SHA-256 为 `3273e216870a9e83762a4be81bb12b104825e8b539d08186d1d04942314331b1` |
 | 抓堆 | spark 1.10.170，通过服务器控制台执行 `spark heapdump`，使用 JProfiler 16.3 离线读取 |
 | 世界与运行 | 种子 `20261115`，20 TPS，视距和模拟距离均为 2，主测区固定强加载 128 个区块。实际抓堆时每组均有 240 个 `LevelChunk`、240 个 `ImposterProtoChunk` 和 68 个真正的 `ProtoChunk` |
 
-**OFF** 与 **ON** 都加载同一个 ASBG JAR、测试驱动和兼容性模组。每组从同一母档复制到独立目录，分别设定 `-Dairsectionbegone.enabled=false` 或 `true`，并在自己的目录完成写入和重启读取。OFF 测量保留 ASBG Mixin 和实例字段时的关闭状态。九场景一共取得并校验 20 份 HPROF，其中 18 份进入下表的 9 对有效对照。
+**OFF** 与 **ON** 都加载同一个 AirBeGone JAR、测试驱动和兼容性模组。每组从同一母档复制到独立目录，分别设定 `-Dairsectionbegone.enabled=false` 或 `true`，并在自己的目录完成写入和重启读取。OFF 测量保留 AirBeGone Mixin 和实例字段时的关闭状态。九场景一共取得并校验 20 份 HPROF，其中 18 份进入下表的 9 对有效对照。
 
 | 高度标识 | 可放置方块 Y | 总高度 | 每套 section 数组长度 |
 | --- | --- | ---: | ---: |
@@ -110,13 +110,13 @@ AirSectionBeGone（ASBG）是 Minecraft 1.21.11 专用服务端的 Fabric 内存
 | POI | 在 200 个空列夹具及实际世界中验证预取、取消、合法高度、真实方块登记、占用与释放、空列与有记录列的 C2ME 卸载、过期数据替换和重启读取 |
 | Polymer 与其他优化模组 | 在正式命名空间检查 LithiumHashPalette、服务端区块包的两次状态映射及解码结果，同时检查 Polymer 同步位置、虚拟光照位置的移除和重建。FerriteCore、ServerCore 随每组共同运行 |
 
-构建记录中 12 项单元测试全部通过。18 个正式运行目录的 `write` 和 `reload` 阶段均有 PASS 记录。独立诊断另完成 8 次，ASM 探针命中 **387/435 行（88.97%）**，记录了 **27 个执行过的 Mixin 方法签名**。分母为已加载且能映射到 ASBG 源码的字节码行。诊断覆盖了关闭 Lithium `ai.poi`、关闭 C2ME 低分配序列化器，以及禁用必要 Lithium section 注入后触发预期启动保护的情况。
+构建记录中 12 项单元测试全部通过。18 个正式运行目录的 `write` 和 `reload` 阶段均有 PASS 记录。独立诊断另完成 8 次，ASM 探针命中 **387/435 行（88.97%）**，记录了 **27 个执行过的 Mixin 方法签名**。分母为已加载且能映射到 AirBeGone 源码的字节码行。诊断覆盖了关闭 Lithium `ai.poi`、关闭 C2ME 低分配序列化器，以及禁用必要 Lithium section 注入后触发预期启动保护的情况。
 
 ### 配对限制与原始证据
 
 - 正式各对的区块对象计数和主测区工作量一致。`normal-1024` 运行时有 4 个 section 落入不同的非空计数分组。主测区摘要和非空段总数一致，离线逐一比较了 240 个 FULL 区块，保存的方块、群系和高度图均相同。
 - 普通地形早期试跑出现随机刻导致的少量地物变化。重新固定游戏规则后完成配对，已匹配的部分早期场景沿用随机刻速率 3。下表列的是各对实际使用的规则。最早一轮 `flat-320/off-1` 的 `fillbiome quart cell` 断言失败，留在试跑记录中。
-- 本轮源码快照与整理报告时的生产源码只有一处差异，`SharedHeightmapStorage#getRaw()` 后续补了 `@NonNull` 类型注解。以上数据对应当时构建的 JAR，文档整理未重新跑服。
+- 本轮源码快照与更名前的生产源码只有一处差异，`SharedHeightmapStorage#getRaw()` 后续补了 `@NonNull` 类型注解。以上数据对应当时构建的 JAR，文档整理未重新跑服。
 
 本机批次目录为 `build/review/asbg-matrix/2026-11-20/`。每行的运行 ID 可在批次 `manifest.json` 与 `heap-index.csv` 中查到，后者同时记录原始 HPROF 文件名、文件大小和 SHA-256。
 
@@ -138,15 +138,15 @@ AirSectionBeGone（ASBG）是 Minecraft 1.21.11 专用服务端的 Fabric 内存
 
 ### 空气与均匀群系容器
 
-ASBG 保留每个 `LevelChunkSection` 的对象身份，只替换其内部 `states` 和 `biomes` 引用。空气与群系分别判定。方块容器可以共享的三种内容为纯 `AIR`、纯 `CAVE_AIR` 和纯 `VOID_AIR`，群系容器可以共享任意已注册的均匀群系。零位 palette 可直接确认，其他候选需要核对最多 4096 个方块或 64 个群系单元。每个群系注册表有三个空气容器和按需创建的群系容器，上界为 `3 + 注册群系数`。 [ASBGSectionManager.java](../src/main/java/com/perry/asbg/section/ASBGSectionManager.java)
+AirBeGone 保留每个 `LevelChunkSection` 的对象身份，只替换其内部 `states` 和 `biomes` 引用。空气与群系分别判定。方块容器可以共享的三种内容为纯 `AIR`、纯 `CAVE_AIR` 和纯 `VOID_AIR`，群系容器可以共享任意已注册的均匀群系。零位 palette 可直接确认，其他候选需要核对最多 4096 个方块或 64 个群系单元。每个群系注册表有三个空气容器和按需创建的群系容器，上界为 `3 + 注册群系数`。 [ASBGSectionManager.java](../src/main/java/com/perry/asbg/section/ASBGSectionManager.java)
 
-折叠入口覆盖 `LevelChunk` 和 `ImposterProtoChunk` 自己的 backing section 数组。包装器的 `getSections()` 返回底下完整区块的数组，ASBG 直接访问父类字段来折叠包装器那套独立数组。真正的 `ProtoChunk` 保持原版表示，生成期的并行写入沿用原路径。 [LevelChunkMixin.java](../src/main/java/com/perry/asbg/mixin/LevelChunkMixin.java) · [ImposterProtoChunkMixin.java](../src/main/java/com/perry/asbg/mixin/ImposterProtoChunkMixin.java)
+折叠入口覆盖 `LevelChunk` 和 `ImposterProtoChunk` 自己的 backing section 数组。包装器的 `getSections()` 返回底下完整区块的数组，AirBeGone 直接访问父类字段来折叠包装器那套独立数组。真正的 `ProtoChunk` 保持原版表示，生成期的并行写入沿用原路径。 [LevelChunkMixin.java](../src/main/java/com/perry/asbg/mixin/LevelChunkMixin.java) · [ImposterProtoChunkMixin.java](../src/main/java/com/perry/asbg/mixin/ImposterProtoChunkMixin.java)
 
 真正会改动共享内容的方块写入会先复制容器，同时复制 Lithium 的 `countsByFlag` 和 `randomTickableBlocksByY` 数组。每段的 `SectionData` 和监听器始终保持自己的身份。整个 section 写回单一空气后，候选至少等 200 tick 再检查，每个世界每 tick 最多检查 64 个有效候选、最多弹出 256 个任务。同一位置最多一个任务，取消通过位置索引取出原节点并从有序队列删除。群系写入沿用原版 `recreate()` 取得可变容器，完成后重新检查是否均匀。 [写入保护](../src/main/java/com/perry/asbg/mixin/LevelChunkSectionStorageMixin.java) · [折叠队列](../src/main/java/com/perry/asbg/section/SectionRefoldScheduler.java) · [架构说明](ARCHITECTURE.md)
 
 ### 完整区块高度图
 
-每张 `Heightmap` 保留独立对象。读盘复原完成后，或生成区块转换成 FULL 后，ASBG 将内容相同的 `SimpleBitStorage` 换成共享不可变存储。弱池先用哈希定位候选，再比较位宽、长度与完整 `long[]`，所以哈希碰撞仍需比较内容。高度图卸载后，池中的代表可以被 GC 回收。 [HeightmapDeduplication.java](../src/main/java/com/perry/asbg/heightmap/HeightmapDeduplication.java) · [SharedHeightmapStorage.java](../src/main/java/com/perry/asbg/heightmap/SharedHeightmapStorage.java)
+每张 `Heightmap` 保留独立对象。读盘复原完成后，或生成区块转换成 FULL 后，AirBeGone 将内容相同的 `SimpleBitStorage` 换成共享不可变存储。弱池先用哈希定位候选，再比较位宽、长度与完整 `long[]`，所以哈希碰撞仍需比较内容。高度图卸载后，池中的代表可以被 GC 回收。 [HeightmapDeduplication.java](../src/main/java/com/perry/asbg/heightmap/HeightmapDeduplication.java) · [SharedHeightmapStorage.java](../src/main/java/com/perry/asbg/heightmap/SharedHeightmapStorage.java)
 
 当写入确实要改变高度时，`Heightmap#setHeight` 处的 `@ModifyReceiver` 将本次写入的接收者换成本图的私有副本，Lithium 合并高度图更新也经过该入口。整表写入和公开的可变数组访问同样会先取得私有存储。保存和区块发包各取独立快照，允许 C2ME 在活动区块后续修改时仍使用已取得的保存数据。 [写保护](../src/main/java/com/perry/asbg/mixin/HeightmapMixin.java) · [保存快照](../src/main/java/com/perry/asbg/mixin/SerializableChunkDataMixin.java) · [网络快照](../src/main/java/com/perry/asbg/mixin/ClientboundLevelChunkPacketDataMixin.java)
 
@@ -154,11 +154,11 @@ ASBG 保留每个 `LevelChunkSection` 的对象身份，只替换其内部 `stat
 
 POI 以区块列 `(x,z)` 为单位读盘，以三维 section 键 `(x,y,z)` 存放记录。每个 `PoiManager` 安装一个 `PoiColumnTracker` 来替换原来的 `loadedChunks`，另以打包后的 XZ 键记录整列解包完成。解包时有 `PoiSection` 的段照常写入，缺少记录的段省掉 `Optional.empty()` 条目。已解包列中合法但缺条目的高度，把查到的 `null` 解释为 `Optional.empty()`。仍在预取或解包的列保留原来的未完成语义。床、工作站等新增记录沿原版 `getOrCreate` 写入，移除最后一个 `PoiRecord` 后现存的 `PoiSection` 仍保留。 [PoiSectionStorageMixin.java](../src/main/java/com/perry/asbg/mixin/PoiSectionStorageMixin.java) · [PoiColumnTracker.java](../src/main/java/com/perry/asbg/poi/PoiColumnTracker.java)
 
-Lithium 继续通过原监听 map 维护高度位图，并用 `nextSetBit` 跳过空段。纯空列在解包完成时由 ASBG 补一个空位图。原版 `get` 和 Lithium 合并进 `SectionStorage` 的 `lithium$getElementAt` 都走同一套空值恢复。C2ME 卸载时从 `loadedChunks` 移除列，tracker 随之清掉解包完成标记和 Lithium 位图。 [LithiumPoiColumns.java](../src/main/java/com/perry/asbg/poi/LithiumPoiColumns.java) · [POI 加载与卸载说明](POI_STORAGE.md)
+Lithium 继续通过原监听 map 维护高度位图，并用 `nextSetBit` 跳过空段。纯空列在解包完成时由 AirBeGone 补一个空位图。原版 `get` 和 Lithium 合并进 `SectionStorage` 的 `lithium$getElementAt` 都走同一套空值恢复。C2ME 卸载时从 `loadedChunks` 移除列，tracker 随之清掉解包完成标记和 Lithium 位图。 [LithiumPoiColumns.java](../src/main/java/com/perry/asbg/poi/LithiumPoiColumns.java) · [POI 加载与卸载说明](POI_STORAGE.md)
 
 ## 构建与复测
 
-项目面向 Minecraft 1.21.11 专用服务端，分发要求 Java 21 或以上、Fabric Loader 0.19.3 或以上、Fabric API 0.141.6+1.21.11 或以上，以及精确版本 Lithium 0.21.4。诊断时用 JVM 参数 `-Dairsectionbegone.enabled=false` 关闭容器共享、高度图去重和 POI 稀疏缓存。 [模组元数据](../src/main/resources/fabric.mod.json)
+项目面向 Minecraft 1.21.11 专用服务端，分发要求 Java 21 或以上、Fabric Loader 0.19.3 或以上、Fabric API 0.141.6+1.21.11 或以上，以及精确版本 Lithium 0.21.4。诊断时用 JVM 参数 `-Dairbegone.enabled=false` 关闭容器共享、高度图去重和 POI 稀疏缓存。 [模组元数据](../src/main/resources/fabric.mod.json)
 
 ```powershell
 .\gradlew.bat build

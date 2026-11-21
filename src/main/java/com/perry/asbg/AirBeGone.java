@@ -11,8 +11,8 @@ import net.minecraft.world.level.chunk.LevelChunkSection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class AirSectionBeGone implements ModInitializer {
-    public static final String MOD_ID = "airsectionbegone";
+public final class AirBeGone implements ModInitializer {
+    public static final String MOD_ID = "airbegone";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     @Override
@@ -21,7 +21,7 @@ public final class AirSectionBeGone implements ModInitializer {
                 && !LithiumSectionData.class.isAssignableFrom(LevelChunkSection.class)
         ) {
             throw new IllegalStateException(
-                    "AirSectionBeGone requires Lithium section-data injection. "
+                    "AirBeGone requires Lithium section-data injection. "
                             + "Check config/lithium.properties: "
                             + "mixin.util and mixin.util.section_data_storage "
                             + "must not be disabled."
@@ -31,7 +31,7 @@ public final class AirSectionBeGone implements ModInitializer {
         ServerWorldEvents.UNLOAD.register((server, level) -> SectionRefoldScheduler.clear(level));
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> ASBGSectionManager.clearCaches());
         LOGGER.info(
-                "AirSectionBeGone initialized for dedicated-server uniform-container deduplication ({})",
+                "AirBeGone initialized for dedicated-server memory optimization ({})",
                 ASBGSectionManager.isEnabled() ? "enabled" : "disabled"
         );
     }

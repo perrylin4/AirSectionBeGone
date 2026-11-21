@@ -28,7 +28,7 @@ import net.minecraft.world.level.chunk.PalettedContainerRO;
 
 public final class ASBGSectionManager {
     private static final boolean ENABLED = Boolean.parseBoolean(
-            System.getProperty("airsectionbegone.enabled", "true")
+            System.getProperty("airbegone.enabled", System.getProperty("airsectionbegone.enabled", "true"))
     );
     private static final Map<Registry<Biome>, SharedRegistryData> SHARED_DATA = new IdentityHashMap<>();
 

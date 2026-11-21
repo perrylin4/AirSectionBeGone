@@ -29,6 +29,6 @@ jobs:
       - name: Upload production JAR
         uses: actions/upload-artifact@v6
         with:
-          name: airsectionbegone-${{ github.sha }}
-          path: build/libs/airsectionbegone-*.jar
+          name: airbegone-${{ github.sha }}
+          path: build/libs/airbegone-*.jar
           if-no-files-found: error
