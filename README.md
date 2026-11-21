@@ -6,6 +6,8 @@ AirSectionBeGone 是一个仅面向专用服务端的 Fabric 1.21.11 内存优�
 - 群系容器支持任意“整个 section 只有同一个已注册群系”的情况；
 - 方块和群系分别判断、分别共享，不再要求二者同时满足条件。
 
+POI 缓存只保存实际的 `PoiSection`，已加载但为空的 section 由区块列完成标记表示，避免高世界为每个空层保存哈希条目。该优化保留 Lithium 的查询位图，并跟随 C2ME 的 POI 卸载清理列状态。
+
 ## 当前约束
 
 - Minecraft `1.21.11`
@@ -28,13 +30,22 @@ AirSectionBeGone 是一个仅面向专用服务端的 Fabric 1.21.11 内存优�
 
 实现与兼容性边界详见 [架构说明](docs/ARCHITECTURE.md)。
 
-诊断或复测时可用 JVM 参数 `-Dairsectionbegone.enabled=false` 保持模组加载但关闭全部折叠逻辑。
+诊断或复测时可用 JVM 参数 `-Dairsectionbegone.enabled=false` 关闭 section 共享与 POI 稀疏缓存。
 
 ## 构建
 
 ```bash
 ./gradlew build
 ```
+
+测试源码统一放在 `src/test/java`。用 `./gradlew test` 运行单元测试。服务端集成测试使用 `src/test/resources/fabric.mod.json` 注册测试入口，检查 POI 和共享容器。
+
+```bash
+./gradlew runPoiTestServer -PpoiIntegrationTest -PpoiTestStage=write
+./gradlew runPoiTestServer -PpoiIntegrationTest -PpoiTestStage=reload
+```
+
+运行前需要在 `build/poi-integration/` 准备测试服的 `eula.txt` 和 `server.properties`；测试服应仅绑定本机。两次运行必须使用同一个测试目录；`write` 会重置测试用的 POI 点位和占用状态，可重复运行。测试完成后自动停服，并由 Gradle 检查结果文件。可用 `-PpoiTestRunDir=build/poi-integration/compat` 指定独立目录，在该目录的 `mods/` 中放入兼容性测试模组。使用 `-PpoiTestOptimize=false` 关闭测试服的 ASBG 总开关，验证原版 POI 条目数量。开启优化时还会运行共享副本隔离、折叠扫描预算和无效写入入队检查。测试模组不会进入分发 JAR。
 
 ## 许可证
 

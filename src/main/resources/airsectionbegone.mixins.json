@@ -8,7 +8,8 @@
     "ChunkAccessSectionStorageMixin",
     "ImposterProtoChunkMixin",
     "LevelChunkMixin",
-    "LevelChunkSectionStorageMixin"
+    "LevelChunkSectionStorageMixin",
+    "PoiSectionStorageMixin"
   ],
   "injectors": {
     "defaultRequire": 1

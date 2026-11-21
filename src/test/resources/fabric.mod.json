@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "asbg-poi-test",
+  "version": "1.0.0",
+  "name": "ASBG POI integration tests",
+  "environment": "server",
+  "entrypoints": {"main": ["com.perry.asbg.test.PoiIntegrationTest"]},
+  "depends": {"airsectionbegone": "*"}
+}

@@ -3,7 +3,7 @@
   "id": "airsectionbegone",
   "version": "${version}",
   "name": "AirSectionBeGone",
-  "description": "Shares immutable AIR/THE_VOID chunk-section data to reduce dedicated-server memory usage.",
+  "description": "Shares uniform chunk-section containers and sparsely caches POI sections to reduce dedicated-server memory usage.",
   "authors": [
     "perrylin4"
   ],

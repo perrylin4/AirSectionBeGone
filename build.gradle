@@ -35,6 +35,42 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
+// A separate mod, loaded only by the explicitly requested integration-test run.
+if (providers.gradleProperty('poiIntegrationTest').isPresent()) {
+	loom {
+		mods {
+			'airsectionbegone' { sourceSet sourceSets.main }
+			'asbg-poi-test' { sourceSet sourceSets.test }
+		}
+		runs {
+			poiTestServer {
+				server()
+				source sourceSets.test
+				runDir = providers.gradleProperty('poiTestRunDir').getOrElse('build/poi-integration')
+				vmArgs '-Xms256m', '-Xmx2G',
+						"-Dasbg.poiTest.stage=${providers.gradleProperty('poiTestStage').getOrElse('write')}",
+						"-Dasbg.poiTest.requireC2me=${providers.gradleProperty('poiTestRequireC2me').getOrElse('false')}",
+						"-Dairsectionbegone.enabled=${providers.gradleProperty('poiTestOptimize').getOrElse('true')}"
+				programArgs 'nogui'
+			}
+		}
+	}
+	tasks.named('runPoiTestServer') {
+		standardInput = System.in
+		def expectedStage = providers.gradleProperty('poiTestStage').getOrElse('write')
+		doFirst {
+			ext.poiTestStartedAt = System.currentTimeMillis()
+		}
+		doLast {
+			def result = new File(workingDir, 'poi-test-result.txt')
+			if (!result.isFile() || result.lastModified() < poiTestStartedAt
+					|| result.text.trim() != "PASS ${expectedStage}") {
+				throw new GradleException('POI integration test did not report a fresh PASS; inspect the test server log.')
+			}
+		}
+	}
+}
+
 def resolvedModVersion = project.version
 
 processResources {
