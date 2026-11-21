@@ -6,10 +6,13 @@
   "mixins": [
     "ChunkAccessMixin",
     "ChunkAccessSectionStorageMixin",
+    "ClientboundLevelChunkPacketDataMixin",
+    "HeightmapMixin",
     "ImposterProtoChunkMixin",
     "LevelChunkMixin",
     "LevelChunkSectionStorageMixin",
-    "PoiSectionStorageMixin"
+    "PoiSectionStorageMixin",
+    "SerializableChunkDataMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -3,7 +3,7 @@
   "id": "airsectionbegone",
   "version": "${version}",
   "name": "AirSectionBeGone",
-  "description": "Shares uniform chunk-section containers and sparsely caches POI sections to reduce dedicated-server memory usage.",
+  "description": "Shares uniform chunk-section containers and identical heightmaps, and sparsely caches POI sections to reduce dedicated-server memory usage.",
   "authors": [
     "perrylin4"
   ],

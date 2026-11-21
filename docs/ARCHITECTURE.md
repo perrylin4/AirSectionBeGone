@@ -91,13 +91,6 @@ C2ME 0.3.6.0 在完整区块状态中长期保留 `new ImposterProtoChunk(levelC
 
 ## 已执行验证
 
-2026-11-11 至 2026-11-12 在 Minecraft 1.21.11、Fabric Loader 0.20.1、Fabric API 0.141.6、Lithium 0.21.4 环境完成：
+POI 稀疏缓存的结构、回归测试与兼容性边界见 [POI_STORAGE.md](POI_STORAGE.md)。它不修改方块容器、光照数据或 POI 磁盘格式。
 
-- `compileJava` 与专用服务端真实启动；
-- `AIR`、`CAVE_AIR`、`VOID_AIR` 各自执行“整 section 折叠 → 写入 `STONE` → 写回原空气 → 延迟重折叠”；
-- `/fillbiome` 在 `PLAINS` 与 `DESERT` 等非虚空均匀群系间往返；
-- 4064 高空世界的 `y=2000`、`y=-2000` 写入验证；
-- C2ME 0.3.6.0 实际启动、额外区块生成、`y=2000` 方块写入/清除、20,000 个快速刻、保存和干净停服。
-- 4064 高世界中 417 个 `ImposterProtoChunk` backing 数组全部折叠，67 个真实 `ProtoChunk` 保持未折叠。
-
-内存基准采用 2026-11-12 至 2026-11-13 同一生产服务器的四份 heap dump，分别比较未优化、仅 ASBG、仅 Polymer 延迟分配与两项同时开启。所有内存分项均以完整对象集合的联合 retained size 为依据，详细方法、可比性限制与结果见 [BENCHMARK.md](BENCHMARK.md)。
+2026-11-20 的九场景对照验证了三类空气、方块写时复制、均匀群系、包装器的独立 backing 数组、延迟折叠预算，以及高度图与 POI 的保存重载。各组同时加载 Lithium、C2ME、FerriteCore、ServerCore 和本地 Polymer lithium-compat。完整的功能断言、联合 retained size 和 MSPT 见 [实现、兼容性与性能报告](BENCHMARK.md)。

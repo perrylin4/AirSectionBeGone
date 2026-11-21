@@ -1,6 +1,7 @@
 package com.perry.asbg.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.perry.asbg.heightmap.HeightmapDeduplication;
 import com.perry.asbg.section.ASBGSectionManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -46,6 +47,15 @@ public abstract class LevelChunkMixin {
         if (level instanceof ServerLevel) {
             ASBGSectionManager.canonicalizeAll((LevelChunk) (Object) this);
         }
+    }
+
+    @Inject(
+            method = "<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;"
+                    + "Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V",
+            at = @At("TAIL")
+    )
+    private void asbg$shareGeneratedHeightmaps(CallbackInfo ci) {
+        HeightmapDeduplication.shareHeightmaps((LevelChunk) (Object) this);
     }
 
     @Inject(

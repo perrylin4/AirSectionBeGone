@@ -39,6 +39,7 @@ public final class PoiIntegrationTest implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             try {
                 SectionIntegrationChecks.run(server);
+                HeightmapIntegrationChecks.run(server);
                 run(server);
                 Files.writeString(Path.of("poi-test-result.txt"), "PASS " + System.getProperty("asbg.poiTest.stage"));
                 System.out.println("ASBG_POI_TEST_PASS");

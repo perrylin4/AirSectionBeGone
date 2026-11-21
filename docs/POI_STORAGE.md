@@ -36,6 +36,6 @@ C2ME 0.3.6.0.0 的 POI 卸载会先保存并移除 section，再调用原版 loa
 
 `src/test/java` 下的 `PoiColumnTrackerTest` 验证加载中和完成状态的区别，以及普通、迭代和批量卸载。同一源码集中的 `PoiIntegrationTest` 由 `runPoiTestServer -PpoiIntegrationTest` 启动。它使用 1728 高度（108 层）的专用 PoiManager，验证 201 个空列、异步预取及丢弃、范围检查、POI 增删、占用和释放、附近查询、实际 C2ME 卸载和保存后重启读取。关闭 POI 优化时，section 条目数应为实际加载列数 × 108（附近搜索可能额外加载邻列）。开启时仅保留 3 个实际 PoiSection。
 
-该测试用于验证 POI 功能。
+该测试用于验证 POI 功能。当前实现的内存对照采用九场景中的实际世界 `PoiManager`，详见 [九场景报告的内存分析](BENCHMARK.md#全堆与各对象族)。
 
 2026-11-15 功能验证：6 个单元测试通过；Lithium 0.21.4 单独、Lithium + C2ME 0.3.6.0.0 + FerriteCore 8.2.0 + ServerCore 1.5.15，以及关闭 Lithium ai.poi 的配置均通过写入与重启读取。另以关闭 ASBG POI 优化的四模组组合完成对照测试。相同的最初 200 个空列对应原版 map 的 21,600 条记录，稀疏 map 为 0 条；列完成标记和 Lithium 位图仍正常保留。测试环境为 Fabric Loader 0.19.3、Java 25，分发字节码目标为 Java 21；测试模组不进入分发 JAR。
