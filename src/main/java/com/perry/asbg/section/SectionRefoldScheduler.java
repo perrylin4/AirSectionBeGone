@@ -60,10 +60,10 @@ public final class SectionRefoldScheduler {
         }
 
         long gameTime = level.getGameTime();
-        int folded = 0;
+        int checked = 0;
         int polled = 0;
 
-        while (folded < MAX_REFOLDS_PER_WORLD_TICK
+        while (checked < MAX_REFOLDS_PER_WORLD_TICK
                 && polled < MAX_QUEUE_POLLS_PER_WORLD_TICK
                 && !queue.candidates.isEmpty()) {
             Candidate candidate = queue.candidates.first();
@@ -83,9 +83,10 @@ public final class SectionRefoldScheduler {
             }
 
             int index = chunk.getSectionIndexFromSectionY(SectionPos.y(candidate.sectionPos()));
-            if (index >= 0 && index < chunk.getSections().length
-                    && ASBGSectionManager.canonicalizeStates(level, chunk.getSection(index))) {
-                folded++;
+            if (index >= 0 && index < chunk.getSections().length) {
+                // A failed uniformity check can scan all 4096 states too.
+                checked++;
+                ASBGSectionManager.canonicalizeStates(level, chunk.getSection(index));
             }
         }
 

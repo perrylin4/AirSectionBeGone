@@ -1,5 +1,6 @@
 package com.perry.asbg.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.perry.asbg.section.ASBGSectionManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -13,6 +14,7 @@ import net.minecraft.world.level.chunk.UpgradeData;
 import net.minecraft.world.level.levelgen.blending.BlendingData;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.ticks.LevelChunkTicks;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -47,9 +49,7 @@ public abstract class LevelChunkMixin {
     }
 
     @Inject(
-            method = "setBlockState(Lnet/minecraft/core/BlockPos;"
-                    + "Lnet/minecraft/world/level/block/state/BlockState;I)"
-                    + "Lnet/minecraft/world/level/block/state/BlockState;",
+            method = "setBlockState",
             at = @At("HEAD")
     )
     private void asbg$prepareBlockWrite(
@@ -61,18 +61,19 @@ public abstract class LevelChunkMixin {
         ASBGSectionManager.prepareBlockWrite((LevelChunk) (Object) this, pos, state);
     }
 
-    @Inject(
-            method = "setBlockState(Lnet/minecraft/core/BlockPos;"
-                    + "Lnet/minecraft/world/level/block/state/BlockState;I)"
-                    + "Lnet/minecraft/world/level/block/state/BlockState;",
+    @ModifyReturnValue(
+            method = "setBlockState",
             at = @At("RETURN")
     )
-    private void asbg$finishBlockWrite(
+    private @Nullable BlockState asbg$finishBlockWrite(
+            @Nullable BlockState previousState,
             BlockPos pos,
             BlockState state,
-            int flags,
-            CallbackInfoReturnable<BlockState> cir
+            int flags
     ) {
-        ASBGSectionManager.finishBlockWrite((LevelChunk) (Object) this, pos, state);
+        if (previousState != null) {
+            ASBGSectionManager.finishBlockWrite((LevelChunk) (Object) this, pos, state);
+        }
+        return previousState;
     }
 }

@@ -110,7 +110,7 @@ public final class ASBGSectionManager {
 
         LevelChunkSection section = chunk.getSection(index);
         if (section.getClass() == LevelChunkSection.class
-                && !(section.getStates() instanceof ImmutablePalettedContainer<?>)
+                && section.getStates().getClass() == PalettedContainer.class
                 && section.hasOnlyAir()) {
             SectionRefoldScheduler.schedule(level, sectionPos(chunk, index));
         }
@@ -118,7 +118,7 @@ public final class ASBGSectionManager {
 
     static boolean canonicalizeStates(ServerLevel level, LevelChunkSection section) {
         if (!isEnabled() || section.getClass() != LevelChunkSection.class
-                || section.getStates() instanceof ImmutablePalettedContainer<?>
+                || section.getStates().getClass() != PalettedContainer.class
                 || !section.hasOnlyAir()) {
             return false;
         }
@@ -139,7 +139,7 @@ public final class ASBGSectionManager {
 
     static void canonicalizeBiomes(ServerLevel level, LevelChunkSection section) {
         if (!isEnabled() || section.getClass() != LevelChunkSection.class
-                || section.getBiomes() instanceof ImmutablePalettedContainer<?>) {
+                || section.getBiomes().getClass() != PalettedContainer.class) {
             return;
         }
 
@@ -201,9 +201,8 @@ public final class ASBGSectionManager {
             return kind;
         }
 
-        // as palettedContainer won't reduce bitsPerEntry into 0 upon set/getAndSet
-        // so we still need to check every block state
-        // bitsPerEntry will only be 0 upon load
+        // Writes do not shrink a widened palette back to zero bits.
+        // Nonzero bits therefore cannot disprove uniformity; check the stored values.
         for (int y = 0; y < LevelChunkSection.SECTION_HEIGHT; y++) {
             for (int z = 0; z < LevelChunkSection.SECTION_WIDTH; z++) {
                 for (int x = 0; x < LevelChunkSection.SECTION_WIDTH; x++) {
@@ -228,9 +227,7 @@ public final class ASBGSectionManager {
             return key;
         }
 
-        // as palettedContainer won't reduce bitsPerEntry into 0 upon set/getAndSet
-        // so we still need to check every biome
-        // bitsPerEntry will only be 0 upon load
+        // A widened biome palette can remain nonzero-bit after all values become equal.
         for (int y = 0; y < 4; y++) {
             for (int z = 0; z < 4; z++) {
                 for (int x = 0; x < 4; x++) {

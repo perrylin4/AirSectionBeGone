@@ -19,10 +19,15 @@ public enum AirKind {
     }
 
     public static AirKind fromState(BlockState state) {
-        for (AirKind kind : values()) {
-            if (state == kind.state) {
-                return kind;
-            }
+        // This runs on the block-write path; values() would clone an array on every call.
+        if (state == AIR.state) {
+            return AIR;
+        }
+        if (state == CAVE_AIR.state) {
+            return CAVE_AIR;
+        }
+        if (state == VOID_AIR.state) {
+            return VOID_AIR;
         }
         return null;
     }

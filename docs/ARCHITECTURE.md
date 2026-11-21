@@ -40,7 +40,9 @@
 4. 同时复制当前 section 自己的 Lithium `countsByFlag` 与 `randomTickableBlocksByY` 数组，之后原版/Lithium 可以按原路径更新它们。
 5. 原版完成方块、计数、高度图、光照和监听器通知。
 6. `RETURN` 处若新状态是三种受支持空气之一，且 section 已经只含空气，则加入延迟折叠队列。
-7. 连续 200 tick 未被非空气写入后，队列重新确认 4096 个状态确实同一种，再换回共享容器。每个世界每 tick 最多完成 64 次折叠，并最多弹出 256 个候选，避免单 tick 尖峰。
+7. 连续 200 tick 未被非空气写入后，队列重新确认 4096 个状态确实同一种，再换回共享容器。每个世界每 tick 最多检查 64 个有效且已加载的候选，无论成功或失败都占用检查预算；另外最多弹出 256 个候选，限制无效/未加载位置的处理开销。
+
+没有实际改变方块的 `LevelChunk#setBlockState` 返回 null，不安排重新折叠。返回值钩子使用 `ModifyReturnValue`，保留原返回值并避免创建额外的返回回调对象。
 
 待折叠任务同时存放在按 section 位置索引的 `Long2ObjectOpenHashMap` 和按“到期时间、section 位置”排序的 `TreeSet` 中。同一位置最多一个任务；取消不存在的任务只查索引，取消有效任务通过索引取得原节点后以 `O(log n)` 从有序集合中删除，不遍历全部任务，也不留下失效节点。相同到期时间的不同 section 会分别保留，最后一个任务取消后立即释放该世界的队列。
 
@@ -75,7 +77,7 @@ C2ME 0.3.6.0 在完整区块状态中长期保留 `new ImposterProtoChunk(levelC
 
 ## 不可变容器
 
-`ImmutablePalettedContainer` 允许读取、序列化、`copy()` 和 `recreate()`，拒绝 `set`、`getAndSet`、`onResize` 与网络反序列化等原地修改操作。`copy()`/`recreate()` 返回普通可变 `PalettedContainer`。
+`ImmutablePalettedContainer` 允许读取、序列化、`copy()` 和 `recreate()`；`set`、`getAndSet`、`getAndSetUnchecked` 仅允许同值写入，`onResize` 与 `read` 一律拒绝。`copy()`/`recreate()` 返回普通可变 `PalettedContainer`，并创建独立 palette：原版 `SingleValuePalette.copy()` 返回自身，仅调用父类 `copy()` 会让副本的 `read()` 污染共享原件。
 
 直接调用 `LevelChunkSection#setBlockState` 已由通用写时复制保护覆盖。进一步取得 `getStates()` 后直接修改 palette，或通过反射/Unsafe 写私有字段，仍不属于兼容写路径；异常是有意的失败保护，防止一次非法写入污染所有共享该容器的区块。
 
@@ -83,7 +85,7 @@ C2ME 0.3.6.0 在完整区块状态中长期保留 `new ImposterProtoChunk(levelC
 
 - 折叠只针对服务端 `LevelChunk` 及其 `ImposterProtoChunk` 包装器自己的 backing sections；真正的 `ProtoChunk` 不修改，因此不会介入原版或 C2ME 的并行生成阶段。
 - 待折叠队列按 `ServerLevel` 隔离，在世界卸载时清除；服务端停止时同时清空共享池。
-- 对其他模组的 `LevelChunkSection` 子类一律跳过。
+- 折叠仅处理原版 `LevelChunkSection`。方块和群系容器分别检查，各自仅在具体类型为原版 `PalettedContainer` 时参与共享，以保留其他模组容器的读写行为。
 - 动态维度通过实际 `ServerLevel` 的注册表、高度与 section 数组处理。
 - 客户端、集成服务端、反射/Unsafe 私有字段写入以及绕过原版区块 API 的直接 palette 写入不在支持范围内。
 

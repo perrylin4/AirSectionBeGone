@@ -59,7 +59,9 @@ public final class ImmutablePalettedContainer<T> extends PalettedContainer<T> {
 
     @Override
     public @NonNull PalettedContainer<T> copy() {
-        return super.copy();
+        // SingleValuePalette.copy() returns itself. A normal copy could therefore
+        // mutate our palette through read(); recreate gives the uniform copy its own palette.
+        return super.recreate();
     }
 
     @Override
